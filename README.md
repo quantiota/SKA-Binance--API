@@ -5,7 +5,7 @@ The system is called The True Machine because it does not simulate the market. I
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
     BINANCE["Binance\ntick data"]
     API["SKA-API"]
     ENTROPY["entropy"]
@@ -15,7 +15,6 @@ flowchart LR
     API --> ENTROPY
     ENTROPY --> BOT
 ```
-
 ---
 
 ## Supported Symbols
