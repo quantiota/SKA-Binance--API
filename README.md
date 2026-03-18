@@ -156,7 +156,6 @@ MIN_NEUTRAL_GAP = 3            # Structural filter
 ## Contents
 
 ```
-ska_api_client/
 ├── README.md           — documentation
 ├── requirements.txt    — dependencies
 ├── trading_bot.py      — PCT state machine, polls /ticks/{symbol}
