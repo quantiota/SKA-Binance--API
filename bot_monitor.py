@@ -67,19 +67,20 @@ def analyze(files):
         best  = df.pnl.max()
         worst = df.pnl.min()
 
-        lines = [
-            f"  File {i:>3}: {os.path.basename(f)}",
+        header = (
+            f"  File {i:>3}: {os.path.basename(f)}\n"
             f"           {n:>3} trades | W={w:>3} L={l:>3} F={flat:>2} | "
             f"win={wr:>5.1f}% | PnL={pips(loop_pnl):>+7.1f} pips | "
-            f"avg={pips(avg):>+5.2f} | best={pips(best):>+5.1f} | worst={pips(worst):>+5.1f}",
-        ]
+            f"avg={pips(avg):>+5.2f} | best={pips(best):>+5.1f} | worst={pips(worst):>+5.1f}"
+        )
+        trades = []
         for _, row in df.iterrows():
             result = 'W' if row.pnl > 0 else ('F' if row.pnl == 0 else 'L')
-            lines.append(
+            trades.append(
                 f"    {result} {row.side:<5} | entry={row.entry:.4f} exit={row.exit:.4f} | "
                 f"PnL={pips(row.pnl):>+6.1f} pips | {row.entry_transition}"
             )
-        per_file.append('\n'.join(lines))
+        per_file.append((header, trades))
 
     combined  = pd.concat(all_dfs)
     n         = len(combined)
@@ -101,7 +102,7 @@ def analyze(files):
     long_avg  = long_df.pnl.mean()  if len(long_df)  > 0 else 0
     short_avg = short_df.pnl.mean() if len(short_df) > 0 else 0
 
-    report = f"""SKA Trading Bot — Report ({len(files)} files)
+    header = f"""SKA Trading Bot — Report ({len(files)} files)
 {'=' * 50}
 Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
@@ -119,9 +120,11 @@ BY SIDE
   SHORT: {len(short_df):>4} trades | PnL={pips(short_pnl):>+8.1f} pips | avg={pips(short_avg):>+5.2f} pips | win_rate={short_wr:.1f}%
 
 PER FILE
-{chr(10).join(per_file)}
 """
-    return report
+    summary = header + '\n'.join(h for h, _ in per_file)
+    detailed = header + '\n'.join(h + '\n' + '\n'.join(t) for h, t in per_file)
+
+    return summary, detailed
 
 
 def send_email(subject, body):
@@ -158,14 +161,15 @@ def main():
         current_count = len(files)
 
         if current_count > last_count:
-            report = analyze(files)
-            if report:
-                subject  = f"SKA Bot Report — {current_count} files — PnL={report.split('Total PnL:')[1].split()[0]} pips"
+            result = analyze(files)
+            if result:
+                summary, detailed = result
+                subject  = f"SKA Bot Report — {current_count} files — PnL={summary.split('Total PnL:')[1].split()[0]} pips"
                 txt_path = os.path.join(RESULTS_DIR, f"ska_report_{current_count}_files.txt")
                 with open(txt_path, 'w') as f:
-                    f.write(report)
+                    f.write(detailed)
                 print(f"Report saved: {txt_path}")
-                send_email(subject, report)
+                send_email(subject, summary)
                 last_count = current_count
 
         time.sleep(POLL_INTERVAL)
