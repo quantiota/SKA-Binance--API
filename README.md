@@ -81,7 +81,7 @@ python trading_bot.py --symbol XRPUSDT --api https://api.quantiota.org
 
 ## Prototype
 
-A ready-to-use trading bot prototype is provided and can be customized.
+A ready-to-use trading bot prototype is provided as a starting point. It demonstrates how to consume the API and apply the signal logic — not intended for production deployment.
 
 ## User Customization
 
