@@ -66,13 +66,18 @@ flowchart TD
     class S5 longPair;
 ```
 
----
-
 ## Supported Symbols
 
 `XRPUSDT` · `BTCUSDT` · `ETHUSDT` · `SOLUSDT`
 
 ---
+
+## Usage
+
+```bash
+pip install -r requirements_client.txt
+python trading_bot.py --symbol XRPUSDT --api https://api.quantiota.org
+```
 
 ## Prototype
 
@@ -81,6 +86,6 @@ A ready-to-use trading bot prototype is provided and can be customized.
 ## User Customization
 
 ```python
-SYMBOL          = "XRPUSDT"
-MIN_NEUTRAL_GAP = 3        # Structural filter
+SYMBOL          = "XRPUSDT"   # XRPUSDT · BTCUSDT · ETHUSDT · SOLUSDT
+MIN_NEUTRAL_GAP = 3            # Structural filter
 ```
