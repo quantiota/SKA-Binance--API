@@ -162,6 +162,11 @@ MIN_NEUTRAL_GAP = 3            # Structural filter
 └── bot_monitor.py      — scans results, generates reports, sends email
 ```
 
+## Dashboard
+
+Each panel displays 4 metrics per symbol, reset every 3500 trades: price, regime transition probabilities, accumulated volume, and entropy.
+
+- [XRPUSDT](https://grafana.quantiota.org/public-dashboards/6506763639364be8bab7e6c60cc8432a)
 
 
 
