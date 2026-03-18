@@ -1,16 +1,9 @@
 # The True Machine API
 The system is called The True Machine because it does not simulate the market. It observes the market as it truly operates across the nine regime transitions.
 
-
 ## Architecture
 
 ```mermaid
----
-config:
-  look: classic
-  theme: base
-  layout: elk
----
 flowchart TD
     BINANCE[(Binance Tick Data)]
     API["SKA API"]
@@ -65,6 +58,48 @@ flowchart TD
     class S4 longOpen;
     class S5 longPair;
 ```
+
+---
+
+## Supported Symbols
+
+`XRPUSDT` · `BTCUSDT` · `ETHUSDT` · `SOLUSDT`
+
+---
+
+## API
+
+**Base URL:** `https://api.quantiota.org`
+
+### `GET /ticks/{symbol}`
+
+Returns the latest ticks with entropy for the given symbol.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `symbol`  | path | —       | Trading pair (`XRPUSDT`, `BTCUSDT`, `ETHUSDT`, `SOLUSDT`) |
+| `since`   | query | `0`   | Return only ticks with `trade_id > since` |
+
+**Response**
+
+```json
+{
+  "symbol": "XRPUSDT",
+  "since": 0,
+  "count": 3,
+  "ticks": [
+    {
+      "trade_id": 1001,
+      "timestamp": "2026-03-18T10:00:00.000000Z",
+      "price": 2.3451,
+      "volume": 120.5,
+      "entropy": 0.182
+    }
+  ]
+}
+```
+
+---
 
 ## Getting Started
 
