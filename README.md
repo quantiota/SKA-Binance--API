@@ -59,13 +59,12 @@ flowchart TD
     class S5 longPair;
 ```
 
----
 
 ## Supported Symbols
 
 `XRPUSDT` · `BTCUSDT` · `ETHUSDT` · `SOLUSDT`
 
----
+
 
 ## API
 
@@ -99,7 +98,7 @@ Returns the latest ticks with entropy for the given symbol.
 }
 ```
 
----
+
 
 ## Getting Started
 
@@ -133,7 +132,7 @@ SYMBOL          = "XRPUSDT"   # XRPUSDT · BTCUSDT · ETHUSDT · SOLUSDT
 MIN_NEUTRAL_GAP = 3            # Structural filter
 ```
 
----
+
 
 ## ToDo
 
@@ -141,7 +140,7 @@ MIN_NEUTRAL_GAP = 3            # Structural filter
 - [ ] Define position size
 - [ ] Implement order execution on OPEN and CLOSE signals
 
----
+
 
 ## Contributing
 
