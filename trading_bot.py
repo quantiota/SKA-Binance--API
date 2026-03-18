@@ -117,7 +117,10 @@ class TradingBot:
         Returns only new transitions (trade_id > last_trade_id).
         Probability P = exp(-|Δentropy / entropy|) — same as original bot.
         """
-        ticks = sorted(ticks, key=lambda t: t['trade_id'])
+        ticks = sorted(
+            (t for t in ticks if t.get('entropy') is not None),
+            key=lambda t: t['trade_id']
+        )
         results = []
         for i in range(2, len(ticks)):
             t0, t1, t2 = ticks[i-2], ticks[i-1], ticks[i]
