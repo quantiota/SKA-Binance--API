@@ -36,12 +36,13 @@ EXIT_WAIT  = 'EXIT_WAIT'
 
 @dataclass
 class Position:
-    side:            str
-    entry_price:     float
-    entry_trade_id:  int
-    entry_time:      str
-    exit_state:      str = field(default=WAIT_PAIR)
-    nn_count:        int = field(default=0)
+    side:             str
+    entry_price:      float
+    entry_trade_id:   int
+    entry_time:       str
+    entry_transition: str
+    exit_state:       str = field(default=WAIT_PAIR)
+    nn_count:         int = field(default=0)
 
 
 class TradingBot:
@@ -99,10 +100,10 @@ class TradingBot:
 
         if self.position is None:
             if name == 'n→bull':
-                self.position = Position('LONG', price, trade_id, ts)
+                self.position = Position('LONG', price, trade_id, ts, name)
                 logging.info(f">>> OPEN LONG  @ {price:.4f} | trade_id={trade_id}")
             elif name == 'n→bear':
-                self.position = Position('SHORT', price, trade_id, ts)
+                self.position = Position('SHORT', price, trade_id, ts, name)
                 logging.info(f">>> OPEN SHORT @ {price:.4f} | trade_id={trade_id}")
             return
 
@@ -135,7 +136,7 @@ class TradingBot:
                     pnl = price - pos.entry_price
                     self._record(pnl, price, 'LONG')
                     logging.info(f"<<< CLOSE LONG @ {price:.4f} | PnL={pnl*10000:+.1f} pips")
-                    self.position = Position('SHORT', price, trade_id, ts)
+                    self.position = Position('SHORT', price, trade_id, ts, 'n→bear')
                     logging.info(f">>> OPEN SHORT @ {price:.4f} | trade_id={trade_id}")
                 elif name == 'n→bull':
                     pos.exit_state = WAIT_PAIR
@@ -168,7 +169,7 @@ class TradingBot:
                     pnl = pos.entry_price - price
                     self._record(pnl, price, 'SHORT')
                     logging.info(f"<<< CLOSE SHORT @ {price:.4f} | PnL={pnl*10000:+.1f} pips")
-                    self.position = Position('LONG', price, trade_id, ts)
+                    self.position = Position('LONG', price, trade_id, ts, 'n→bull')
                     logging.info(f">>> OPEN LONG  @ {price:.4f} | trade_id={trade_id}")
                 elif name == 'n→bear':
                     pos.exit_state = WAIT_PAIR
@@ -182,11 +183,12 @@ class TradingBot:
         else:
             self.losers += 1
         row = {
-            'side':     side,
-            'entry':    self.position.entry_price,
-            'exit':     exit_price,
-            'pnl':      pnl,
-            'pnl_pips': round(pnl / 0.0001, 1),
+            'side':             side,
+            'entry':            self.position.entry_price,
+            'exit':             exit_price,
+            'pnl':              pnl,
+            'pnl_pips':         round(pnl / 0.0001, 1),
+            'entry_transition': self.position.entry_transition,
         }
         with open(self.results_file, 'a', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=row.keys())

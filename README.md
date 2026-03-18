@@ -98,6 +98,18 @@ Returns the latest ticks with entropy for the given symbol.
 }
 ```
 
+## Monitor
+
+`bot_monitor.py` watches the folder for result CSVs, computes cumulative P&L after each new file, saves a report, and sends it by email.
+
+```bash
+export GMAIL_APP_PASSWORD="xxxx xxxx xxxx xxxx"
+export GMAIL_FROM="your@gmail.com"
+export GMAIL_TO="your@gmail.com"
+python bot_monitor.py
+```
+
+
 
 
 ## Getting Started
