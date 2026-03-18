@@ -75,7 +75,7 @@ flowchart TD
 ## Usage
 
 ```bash
-pip install -r requirements_client.txt
+pip install -r requirements.txt
 python trading_bot.py --symbol XRPUSDT --api https://api.quantiota.org
 ```
 
