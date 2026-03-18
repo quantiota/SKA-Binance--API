@@ -174,6 +174,13 @@ Each panel displays 4 metrics per symbol, reset every 3500 trades: price, regime
 
 - SOLUSDT
 
+
+
+## SKA Real-Time Dashboard — XRPUSDT Live Market Structure Analysis (Youtube)
+
+[![Watch the demo](thumbnail.png)](https://youtu.be/01qdoMPAlB4?si=5xDByNTuGZF4gare/video)
+
+
 ## Contributing
 
 Contributions are welcome — strategy variants, new symbols, execution integrations, or performance improvements.
