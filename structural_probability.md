@@ -106,3 +106,4 @@ Constants:
 |----------------|--------|
 | BULL_THRESHOLD | 0.148  |
 | BEAR_THRESHOLD | 0.221  |
+
