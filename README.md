@@ -209,4 +209,3 @@ The full mathematical foundation and batch implementation are public for verific
 Contributions are welcome — strategy variants, new symbols, execution integrations, or performance improvements.
 
 Open an issue or submit a pull request.
-
