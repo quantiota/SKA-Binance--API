@@ -2,8 +2,8 @@
 
 ## Definition
 
-At each tick n, the SKA engine computes an entropy value H.
-The probability P is derived from the relative entropy change between two consecutive ticks:
+At each tick n, the SKA API returns an entropy value H (field: `entropy`).
+The structural probability P is derived from the relative entropy change between two consecutive ticks:
 
 ```
 P(n) = exp(−|ΔH/H|)   where   ΔH/H = (H(n) − H(n−1)) / H(n)
@@ -14,51 +14,57 @@ P(n) ∈ (0, 1]
 - `|ΔH/H|` large  →  P close to 0  →  strong structural change
 - `|ΔH/H|` small  →  P close to 1  →  entropy barely moving
 
+P is computed by the client from two consecutive `entropy` values returned by the API.
+
 ---
 
 ## Regime Classification
 
-At each tick, the regime is determined by the drop in P relative to the previous tick:
+Define the tick-level probability variation:
 
 ```
-P(n) < P(n−1) − 0.221                →  bear    (large drop)
-P(n−1) − 0.221  ≤  P(n)  <  P(n−1) − 0.148  →  bull    (moderate drop)
-P(n)  ≥  P(n−1) − 0.148              →  neutral
+δP_tick = P(n) − P(n−1)
 ```
 
-Both bull and bear open on a drop in P. The magnitude of the drop distinguishes them.
+The regime at tick n is classified as:
+
+```
+δP_tick < −0.221                    →  bear    (large drop)
+−0.221  ≤  δP_tick  <  −0.148      →  bull    (moderate drop)
+δP_tick  ≥  −0.148                  →  neutral
+```
+
+Both bull and bear are triggered by a negative δP_tick.
+The magnitude of the drop is the only distinction between them.
 
 ---
 
-## ΔP for a Paired Regime Transition
+## Paired Transition Gap
 
 A trade is a **pair of two transitions**: an opening and a closing.
-ΔP is defined specifically within this pair:
+Define the paired transition gap:
 
 ```
-ΔP = P(n) − P(n−1)
-
-  where  n−1 = opening transition tick  (neutral→bull  or  neutral→bear)
-         n   = closing transition tick  (bull→neutral  or  bear→neutral)
+ΔP_pair = P(closing transition) − P(opening transition)
 ```
 
-ΔP is not a tick-by-tick quantity. It is the change in P between the
-**two regime ticks of the same pair**.
+ΔP_pair is not a tick-by-tick quantity. It is the change in P between the
+two regime ticks of the same pair.
 
 ---
 
-## ΔP in Each Paired Regime
+## ΔP_pair in Each Paired Regime
 
 ### Bull pair
 
 ```
-n−1  :  neutral → bull   (LONG entry)    P(n−1) ≈ 0.82
-n    :  bull → neutral   (LONG exit)     P(n)   ≈ 0.80
+opening  :  neutral → bull   (LONG pair open)       P ≈ 0.82
+closing  :  bull → neutral   (LONG pair confirmed)   P ≈ 0.80
 
-ΔP_bull = P(n) − P(n−1) = 0.80 − 0.82 = −0.02   →   negative
+ΔP_pair = 0.80 − 0.82 = −0.02   →   negative
 ```
 
-P continued to fall between the opening and closing transitions.
+P continued to fall between opening and closing.
 The closing is not a recovery — it is where the drift slowed below the threshold.
 
 ---
@@ -66,44 +72,65 @@ The closing is not a recovery — it is where the drift slowed below the thresho
 ### Bear pair
 
 ```
-n−1  :  neutral → bear   (SHORT entry)   P(n−1) ≈ 0.56
-n    :  bear → neutral   (SHORT exit)    P(n)   ≈ 0.75
+opening  :  neutral → bear   (SHORT pair open)       P ≈ 0.56
+closing  :  bear → neutral   (SHORT pair confirmed)   P ≈ 0.75
 
-ΔP_bear = P(n) − P(n−1) = 0.75 − 0.56 = +0.19   →   positive
+ΔP_pair = 0.75 − 0.56 = +0.19   →   positive
 ```
 
-P rebounded between the opening and closing transitions.
+P rebounded between opening and closing.
 The closing is an active recovery — the entropy shock has resolved.
 
 ---
 
 ## The Opposite Sign
 
-| Pair  | P at opening | P at closing | ΔP        | Nature               |
-|-------|-------------|--------------|-----------|----------------------|
+| Pair  | P at opening | P at closing | ΔP_pair   | Nature                  |
+|-------|-------------|--------------|-----------|-------------------------|
 | Bull  | ≈ 0.82      | ≈ 0.80       | **< 0**   | drift — P falls through |
-| Bear  | ≈ 0.56      | ≈ 0.75       | **> 0**   | shock — P snaps back |
+| Bear  | ≈ 0.56      | ≈ 0.75       | **> 0**   | shock — P snaps back    |
 
-Both pairs open with a drop in P.
-The sign of ΔP across the pair is what separates them:
-- Bull: P **drifts lower** — the entropy change is sustained
-- Bear: P **recovers** — the entropy shock was brief and violent
+Both pairs open with a negative δP_tick.
+In the observed data, bull pairs satisfy `ΔP_pair < 0` while bear pairs satisfy
+`ΔP_pair > 0`. This empirical sign separation distinguishes a sustained entropy
+drift from a brief entropy shock.
 
 ---
 
-## Trading Logic
+## Regime Transitions
 
-| Code | Transition     | Action       |
-|------|----------------|--------------|
-| 1    | neutral → bull | LONG entry   |
-| 3    | bull → neutral | LONG exit    |
-| 2    | neutral → bear | SHORT entry  |
-| 6    | bear → neutral | SHORT exit   |
+### Pair events
 
-Constants:
+| Code | Transition     | Event                   |
+|------|----------------|-------------------------|
+| 1    | neutral → bull | LONG pair open          |
+| 3    | bull → neutral | LONG pair confirmation  |
+| 2    | neutral → bear | SHORT pair open         |
+| 6    | bear → neutral | SHORT pair confirmation |
 
-| Constant       | Value  |
-|----------------|--------|
-| BULL_THRESHOLD | 0.148  |
-| BEAR_THRESHOLD | 0.221  |
+### Full trade logic
+
+A trade does not open on the pair open event alone.
+The full state machine requires:
+
+```
+LONG:
+  neutral → bull             LONG pair open        (WAIT_PAIR)
+  bull → neutral             pair confirmed         (IN_NEUTRAL)
+  neutral × N  (N ≥ 3)       neutral gap            (READY)
+  neutral → bear             opposite pair opens    (EXIT_WAIT)
+  bear → neutral             opposite confirmed     → CLOSE LONG
+
+SHORT: mirror logic.
+```
+
+---
+
+## Constants
+
+| Constant        | Value | Description                               |
+|-----------------|-------|-------------------------------------------|
+| BULL_THRESHOLD  | 0.148 | δP_tick lower bound for bull regime       |
+| BEAR_THRESHOLD  | 0.221 | δP_tick lower bound for bear regime       |
+| MIN_NEUTRAL_GAP | 3     | minimum neutral ticks before READY state  |
 
