@@ -153,6 +153,29 @@ SYMBOL          = "XRPUSDT"   # XRPUSDT · BTCUSDT · ETHUSDT · SOLUSDT
 MIN_NEUTRAL_GAP = 3            # Structural filter
 ```
 
+## Live Results — XRPUSDT (42 loops · 147,000 ticks)
+
+> Dry-run backtest on live Binance tick stream. Each loop = 3500 trades processed by the SKA engine.
+
+| Metric | Value |
+|--------|-------|
+| Total trades | 1,145 |
+| Win rate | **59.8%** |
+| Total PnL | **+2,166 pips** |
+| Avg PnL / trade | +1.89 pips |
+| Best trade | +23 pips |
+| Worst trade | −15 pips |
+| Profitable loops | **41 / 42** |
+
+**By side**
+
+| Side | Trades | PnL | Win rate |
+|------|--------|-----|----------|
+| LONG | 576 | +1,180 pips | 61.6% |
+| SHORT | 569 | +986 pips | 58.0% |
+
+The signal is symmetric — both LONG and SHORT are profitable. The only losing loop (loop 28, −32 pips) recovered fully in the next loop (+37 pips). The worst single trade is capped at −15 pips across the entire dataset.
+
 
 
 ## ToDo
