@@ -1,7 +1,12 @@
 # SKA Binance API
-The system does not simulate the market. It observes the market as it truly operates across the nine regime transitions. 
+The system does not simulate the market. It observes the market as it truly operates across the nine regime transitions.
 
-The "signal" is the market's own structure firing — neutral→bull is not a computed indicator, it is a regime transition event. The market generates it itself. SKA reads it.   
+The "signal" is the market's own structure firing — neutral→bull is not a computed indicator, it is a regime transition event. The market generates it itself. SKA reads it.
+
+The market looks chaotic — random price movements, noise, unpredictable events. But underneath, the regime transition probabilities are stationary. Chaos would mean the transition matrix is random. It is not. It is stable and non-uniform. That non-uniformity is the structure SKA learns.
+
+The market is a deterministic process in probability space — not in price space. Everyone looks at price and sees chaos. SKA looks at entropy and sees order.
+  
 
 ## Architecture
 
