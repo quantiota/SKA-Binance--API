@@ -1,7 +1,7 @@
 """
 SKA Trading Bot Monitor
 
-Watches the current folder for trading_bot_*.csv result files.
+Watches RESULTS_DIR for CSV result files.
 Every new CSV, computes cumulative P&L and sends an email report.
 
 Usage:
@@ -27,7 +27,10 @@ from email.mime.text import MIMEText
 
 import pandas as pd
 
+VERSION       = 2    # ← change this to switch between bot versions
+
 RESULTS_DIR   = "."
+CSV_PATTERN   = f"bot_results_v{VERSION}_*.csv"
 POLL_INTERVAL = 30   # seconds
 SMTP_SERVER   = "smtp.gmail.com"
 SMTP_PORT     = 587
@@ -43,7 +46,7 @@ def pips(val):
 
 
 def get_csv_files():
-    return sorted(glob.glob(os.path.join(RESULTS_DIR, "trading_bot_*.csv")))
+    return sorted(glob.glob(os.path.join(RESULTS_DIR, CSV_PATTERN)))
 
 
 def analyze(files):
@@ -55,17 +58,19 @@ def analyze(files):
 
     for i, f in enumerate(files, 1):
         df = pd.read_csv(f)
+        if 'pnl' not in df.columns:
+            df = pd.read_csv(f, names=['side', 'entry', 'exit', 'pnl', 'pnl_pct', 'entry_transition'], header=None)
         all_dfs.append(df)
 
-        n     = len(df)
-        w     = (df.pnl > 0).sum()
-        l     = (df.pnl < 0).sum()
-        flat  = (df.pnl == 0).sum()
-        wr    = w / n * 100 if n > 0 else 0
+        n        = len(df)
+        w        = (df.pnl > 0).sum()
+        l        = (df.pnl < 0).sum()
+        flat     = (df.pnl == 0).sum()
+        wr       = w / n * 100 if n > 0 else 0
         loop_pnl = df.pnl.sum()
-        avg   = df.pnl.mean()
-        best  = df.pnl.max()
-        worst = df.pnl.min()
+        avg      = df.pnl.mean()
+        best     = df.pnl.max()
+        worst    = df.pnl.min()
 
         header = (
             f"  File {i:>3}: {os.path.basename(f)}\n"
@@ -102,7 +107,7 @@ def analyze(files):
     long_avg  = long_df.pnl.mean()  if len(long_df)  > 0 else 0
     short_avg = short_df.pnl.mean() if len(short_df) > 0 else 0
 
-    header = f"""SKA Trading Bot — Report ({len(files)} files)
+    header = f"""SKA Trading Bot v{VERSION} — Report ({len(files)} files)
 {'=' * 50}
 Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
@@ -121,7 +126,7 @@ BY SIDE
 
 PER FILE
 """
-    summary = header + '\n'.join(h for h, _ in per_file)
+    summary  = header + '\n'.join(h for h, _ in per_file)
     detailed = header + '\n'.join(h + '\n' + '\n'.join(t) for h, t in per_file)
 
     return summary, detailed
@@ -165,7 +170,7 @@ def main():
             if result:
                 summary, detailed = result
                 subject  = f"SKA Bot Report — {current_count} files — PnL={summary.split('Total PnL:')[1].split()[0]} pips"
-                txt_path = os.path.join(RESULTS_DIR, f"ska_report_{current_count}_files.txt")
+                txt_path = os.path.join(RESULTS_DIR, f"ska_report_v{VERSION}_{current_count}_files.txt")
                 with open(txt_path, 'w') as f:
                     f.write(detailed)
                 print(f"Report saved: {txt_path}")
