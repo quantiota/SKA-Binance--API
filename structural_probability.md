@@ -29,9 +29,9 @@ Define the tick-level probability variation:
 The regime at tick n is classified as:
 
 ```
-δP_tick < −0.221                    →  bear    (large drop)
-−0.221  ≤  δP_tick  <  −0.148      →  bull    (moderate drop)
-δP_tick  ≥  −0.148                  →  neutral
+δP_tick < −0.235                    →  bear    (large drop)
+−0.235  ≤  δP_tick  <  −0.155      →  bull    (moderate drop)
+δP_tick  ≥  −0.155                  →  neutral
 ```
 
 Both bull and bear are triggered by a negative δP_tick.
@@ -58,10 +58,10 @@ two regime ticks of the same pair.
 ### Bull pair
 
 ```
-opening  :  neutral → bull   (LONG pair open)       P ≈ 0.82
+opening  :  neutral → bull   (LONG pair open)       P ≈ 0.835
 closing  :  bull → neutral   (LONG pair confirmed)   P ≈ 0.80
 
-ΔP_pair = 0.80 − 0.82 = −0.02   →   negative
+ΔP_pair = 0.80 − 0.835 = −0.028   →   negative
 ```
 
 P continued to fall between opening and closing.
@@ -72,10 +72,10 @@ The closing is not a recovery — it is where the drift slowed below the thresho
 ### Bear pair
 
 ```
-opening  :  neutral → bear   (SHORT pair open)       P ≈ 0.56
-closing  :  bear → neutral   (SHORT pair confirmed)   P ≈ 0.75
+opening  :  neutral → bear   (SHORT pair open)       P ≈ 0.755
+closing  :  bear → neutral   (SHORT pair confirmed)   P ≈ 0.80
 
-ΔP_pair = 0.75 − 0.56 = +0.19   →   positive
+ΔP_pair = 0.80 − 0.755 = +0.045   →   positive
 ```
 
 P rebounded between opening and closing.
@@ -85,10 +85,10 @@ The closing is an active recovery — the entropy shock has resolved.
 
 ## The Opposite Sign
 
-| Pair  | P at opening | P at closing | ΔP_pair   | Nature                  |
-|-------|-------------|--------------|-----------|-------------------------|
-| Bull  | ≈ 0.82      | ≈ 0.80       | **< 0**   | drift — P falls through |
-| Bear  | ≈ 0.56      | ≈ 0.75       | **> 0**   | shock — P snaps back    |
+| Pair  | P at opening | P at closing | ΔP_pair    | Nature                  |
+|-------|-------------|--------------|------------|-------------------------|
+| Bull  | ≈ 0.835     | ≈ 0.80       | **−0.028** | drift — P falls through |
+| Bear  | ≈ 0.755     | ≈ 0.80       | **+0.045** | shock — P snaps back    |
 
 Both pairs open with a negative δP_tick.
 In the observed data, bull pairs satisfy `ΔP_pair < 0` while bear pairs satisfy
@@ -130,7 +130,49 @@ SHORT: mirror logic.
 
 | Constant        | Value | Description                               |
 |-----------------|-------|-------------------------------------------|
-| BULL_THRESHOLD  | 0.148 | δP_tick lower bound for bull regime       |
-| BEAR_THRESHOLD  | 0.221 | δP_tick lower bound for bear regime       |
+| BULL_THRESHOLD  | 0.155 | δP_tick lower bound for bull regime       |
+| BEAR_THRESHOLD  | 0.235 | δP_tick lower bound for bear regime       |
 | MIN_NEUTRAL_GAP | 3     | minimum neutral ticks before READY state  |
 
+---
+
+## State Machine Diagram
+
+```mermaid
+flowchart TD
+    P["P(n) = exp(-|ΔH/H|)"]
+    DP["ΔP(n) = P(n) - P(n-1)"]
+
+    P --> DP
+
+    DP -->|"ΔP ≥ -0.155"| N["regime = 0\nneutral"]
+    DP -->|"-0.235 ≤ ΔP < -0.155"| B["regime = 1\nbull"]
+    DP -->|"ΔP < -0.235"| R["regime = 2\nbear"]
+
+    N -->|"prev=0 curr=0"| T0["neutral→neutral\nP ≈ 0.99"]
+    N -->|"prev=1 curr=0"| T1["bull→neutral\nP ≈ 0.80"]
+    N -->|"prev=2 curr=0"| T2["bear→neutral\nP ≈ 0.80"]
+
+    B -->|"prev=0 curr=1"| T3["neutral→bull\nP ≈ 0.835"]
+    B -->|"prev=1 curr=1"| T4["bull→bull"]
+
+    R -->|"prev=0 curr=2"| T5["neutral→bear\nP ≈ 0.755"]
+    R -->|"prev=2 curr=2"| T6["bear→bear"]
+
+    T3 -->|"OPEN LONG"| WAIT_PAIR_L["WAIT_PAIR\nLONG"]
+    T5 -->|"OPEN SHORT"| WAIT_PAIR_S["WAIT_PAIR\nSHORT"]
+
+    WAIT_PAIR_L -->|"bull→neutral\npair confirmed"| IN_N_L["IN_NEUTRAL\ncounting neutral→neutral"]
+    WAIT_PAIR_S -->|"bear→neutral\npair confirmed"| IN_N_S["IN_NEUTRAL\ncounting neutral→neutral"]
+
+    IN_N_L -->|"n ≥ 3 then non-neutral"| READY_L["READY\nLONG"]
+    IN_N_S -->|"n ≥ 3 then non-neutral"| READY_S["READY\nSHORT"]
+
+    READY_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
+    READY_L -->|"neutral→bear\nopposite opens"| EXIT_L["EXIT_WAIT\nLONG"]
+    EXIT_L -->|"bear→neutral\nopposite confirmed"| CLOSE_L["CLOSE LONG"]
+
+    READY_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
+    READY_S -->|"neutral→bull\nopposite opens"| EXIT_S["EXIT_WAIT\nSHORT"]
+    EXIT_S -->|"bull→neutral\nopposite confirmed"| CLOSE_S["CLOSE SHORT"]
+```
