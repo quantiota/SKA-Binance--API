@@ -29,9 +29,9 @@ Define the tick-level probability variation:
 The regime at tick n is classified as:
 
 ```
-δP_tick < −0.235                    →  bear    (large drop)
-−0.235  ≤  δP_tick  <  −0.155      →  bull    (moderate drop)
-δP_tick  ≥  −0.155                  →  neutral
+δP_tick < −0.86                    →  bear    (large drop)
+−0.86  ≤  δP_tick  <  −0.34       →  bull    (moderate drop)
+δP_tick  ≥  −0.34                  →  neutral
 ```
 
 Both bull and bear are triggered by a negative δP_tick.
@@ -58,10 +58,10 @@ two regime ticks of the same pair.
 ### Bull pair
 
 ```
-opening  :  neutral → bull   (LONG pair open)       P ≈ 0.835
-closing  :  bull → neutral   (LONG pair confirmed)   P ≈ 0.80
+opening  :  neutral → bull   (LONG pair open)       P ≈ 0.66
+closing  :  bull → neutral   (LONG pair confirmed)   P ≈ 0.51
 
-ΔP_pair = 0.80 − 0.835 = −0.028   →   negative
+ΔP_pair = 0.51 − 0.66 = −0.15   →   negative
 ```
 
 P continued to fall between opening and closing.
@@ -72,10 +72,10 @@ The closing is not a recovery — it is where the drift slowed below the thresho
 ### Bear pair
 
 ```
-opening  :  neutral → bear   (SHORT pair open)       P ≈ 0.755
-closing  :  bear → neutral   (SHORT pair confirmed)   P ≈ 0.80
+opening  :  neutral → bear   (SHORT pair open)       P ≈ 0.14
+closing  :  bear → neutral   (SHORT pair confirmed)   P ≈ 0.51
 
-ΔP_pair = 0.80 − 0.755 = +0.045   →   positive
+ΔP_pair = 0.51 − 0.14 = +0.37   →   positive
 ```
 
 P rebounded between opening and closing.
@@ -87,8 +87,8 @@ The closing is an active recovery — the entropy shock has resolved.
 
 | Pair  | P at opening | P at closing | ΔP_pair    | Nature                  |
 |-------|-------------|--------------|------------|-------------------------|
-| Bull  | ≈ 0.835     | ≈ 0.80       | **−0.028** | drift — P falls through |
-| Bear  | ≈ 0.755     | ≈ 0.80       | **+0.045** | shock — P snaps back    |
+| Bull  | ≈ 0.66      | ≈ 0.51       | **−0.15**  | drift — P falls through |
+| Bear  | ≈ 0.14      | ≈ 0.51       | **+0.37**  | shock — P snaps back    |
 
 Both pairs open with a negative δP_tick.
 In the observed data, bull pairs satisfy `ΔP_pair < 0` while bear pairs satisfy
@@ -126,13 +126,64 @@ SHORT: mirror logic.
 
 ---
 
+## P Band Structure
+
+P band positions are **universal constants** of the SKA entropy geometry — identical across all assets and exchanges once the input scale reaches convergence.
+
+| Transition      | P (converged) | Role                        |
+|-----------------|---------------|-----------------------------|
+| neutral→neutral | ≈ 1.00        | entropy at rest             |
+| neutral→bull    | ≈ 0.66        | entropy drift opening       |
+| bull→neutral    | ≈ 0.51        | entropy drift closing       |
+| bear→neutral    | ≈ 0.51        | entropy shock closing       |
+| neutral→bear    | ≈ 0.14        | entropy shock opening       |
+
+Confirmed on XRPUSDT (scale=50,000) and BTCUSDT (scale=500,000) — same values.
+
+The **convergence scale** is asset-specific (determined by tick/price ratio). The **band positions** at convergence are asset-independent.
+
+### The 1-bit closing boundary
+
+At the closing of both paired transitions, P ≈ 0.51 ≈ 0.5:
+
+```
+exp(−|ΔH/H|) = 0.5  →  |ΔH/H| = ln(2)
+```
+
+ln(2) is **1 bit of information** — the Shannon entropy of a fair coin flip.
+Both bull and bear pairs close exactly when the entropy change reaches 1 bit:
+the natural information-theoretic boundary between structured and random regimes.
+
+---
+
 ## Constants
 
-| Constant        | Value | Description                               |
-|-----------------|-------|-------------------------------------------|
-| BULL_THRESHOLD  | 0.155 | δP_tick lower bound for bull regime       |
-| BEAR_THRESHOLD  | 0.235 | δP_tick lower bound for bear regime       |
-| MIN_NEUTRAL_GAP | 3     | minimum neutral ticks before READY state  |
+| Constant        | Value | Description                                      |
+|-----------------|-------|--------------------------------------------------|
+| BULL_THRESHOLD  | 0.34  | = P(neutral→neutral) − P(neutral→bull) = 1.00 − 0.66 |
+| BEAR_THRESHOLD  | 0.86  | = P(neutral→neutral) − P(neutral→bear) = 1.00 − 0.14 |
+| MIN_NEUTRAL_GAP | 3     | minimum neutral ticks before READY state         |
+
+---
+
+## Asset and Exchange Independence
+
+The trading bot operates entirely on the entropy signal:
+
+```
+H(n)  →  ΔH/H  →  P(n)  →  ΔP(n)  →  regime  →  trade decision
+```
+
+It never observes price direction, orderbook, spread, or exchange microstructure.
+All exchange-specific details (WebSocket protocol, symbol format, timestamp precision)
+are absorbed in the streaming layer and learning engine.
+
+**Confirmed independent of:**
+- Asset (XRPUSDT vs BTCUSDT — 60,000× price difference)
+- Scale (different convergence scales per asset, same band structure)
+
+**Pending validation:**
+- Exchange independence (Binance → Coinbase)
 
 ---
 
@@ -145,18 +196,18 @@ flowchart TD
 
     P --> DP
 
-    DP -->|"ΔP ≥ -0.155"| N["regime = 0\nneutral"]
-    DP -->|"-0.235 ≤ ΔP < -0.155"| B["regime = 1\nbull"]
-    DP -->|"ΔP < -0.235"| R["regime = 2\nbear"]
+    DP -->|"ΔP ≥ -0.34"| N["regime = 0\nneutral"]
+    DP -->|"-0.86 ≤ ΔP < -0.34"| B["regime = 1\nbull"]
+    DP -->|"ΔP < -0.86"| R["regime = 2\nbear"]
 
-    N -->|"prev=0 curr=0"| T0["neutral→neutral\nP ≈ 0.99"]
-    N -->|"prev=1 curr=0"| T1["bull→neutral\nP ≈ 0.80"]
-    N -->|"prev=2 curr=0"| T2["bear→neutral\nP ≈ 0.80"]
+    N -->|"prev=0 curr=0"| T0["neutral→neutral\nP ≈ 1.00"]
+    N -->|"prev=1 curr=0"| T1["bull→neutral\nP ≈ 0.51"]
+    N -->|"prev=2 curr=0"| T2["bear→neutral\nP ≈ 0.51"]
 
-    B -->|"prev=0 curr=1"| T3["neutral→bull\nP ≈ 0.835"]
+    B -->|"prev=0 curr=1"| T3["neutral→bull\nP ≈ 0.66"]
     B -->|"prev=1 curr=1"| T4["bull→bull"]
 
-    R -->|"prev=0 curr=2"| T5["neutral→bear\nP ≈ 0.755"]
+    R -->|"prev=0 curr=2"| T5["neutral→bear\nP ≈ 0.14"]
     R -->|"prev=2 curr=2"| T6["bear→bear"]
 
     T3 -->|"OPEN LONG"| WAIT_PAIR_L["WAIT_PAIR\nLONG"]
