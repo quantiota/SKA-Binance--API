@@ -16,7 +16,7 @@ P(n) ∈ (0, 1]
 
 P is computed by the client from two consecutive `entropy` values returned by the API.
 
----
+
 
 ## Regime Classification
 
@@ -37,7 +37,7 @@ The regime at tick n is classified as:
 Both bull and bear are triggered by a negative δP_tick.
 The magnitude of the drop is the only distinction between them.
 
----
+
 
 ## Paired Transition Gap
 
@@ -51,7 +51,7 @@ Define the paired transition gap:
 ΔP_pair is not a tick-by-tick quantity. It is the change in P between the
 two regime ticks of the same pair.
 
----
+
 
 ## ΔP_pair in Each Paired Regime
 
@@ -67,7 +67,7 @@ closing  :  bull → neutral   (LONG pair confirmed)   P ≈ 0.51
 P continued to fall between opening and closing.
 The closing is not a recovery — it is where the drift slowed below the threshold.
 
----
+
 
 ### Bear pair
 
@@ -81,7 +81,7 @@ closing  :  bear → neutral   (SHORT pair confirmed)   P ≈ 0.51
 P rebounded between opening and closing.
 The closing is an active recovery — the entropy shock has resolved.
 
----
+
 
 ## The Opposite Sign
 
@@ -95,7 +95,7 @@ In the observed data, bull pairs satisfy `ΔP_pair < 0` while bear pairs satisfy
 `ΔP_pair > 0`. This empirical sign separation distinguishes a sustained entropy
 drift from a brief entropy shock.
 
----
+
 
 ## Regime Transitions
 
@@ -124,7 +124,7 @@ LONG:
 SHORT: mirror logic.
 ```
 
----
+
 
 ## P Band Structure
 
@@ -154,7 +154,7 @@ ln(2) is **1 bit of information** — the Shannon entropy of a fair coin flip.
 Both bull and bear pairs close exactly when the entropy change reaches 1 bit:
 the natural information-theoretic boundary between structured and random regimes.
 
----
+
 
 ## Constants
 
@@ -164,7 +164,7 @@ the natural information-theoretic boundary between structured and random regimes
 | BEAR_THRESHOLD  | 0.86  | = P(neutral→neutral) − P(neutral→bear) = 1.00 − 0.14 |
 | MIN_NEUTRAL_GAP | 3     | minimum neutral ticks before READY state         |
 
----
+
 
 ## Asset and Exchange Independence
 
