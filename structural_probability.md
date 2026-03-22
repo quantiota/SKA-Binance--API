@@ -217,7 +217,7 @@ The live measurement matches the theoretical constant to 3 decimal places.
 ## P Trajectory — Bull Cycle on Probability Space
 
 
-```mermaid
+```mermaid 
 block-beta
   columns 6
   B1["neutral→neutral\nP ≈ 1.00"] space space B4["neutral→neutral\nP ≈ 1.00"] B5["neutral→neutral\nP ≈ 1.00"] B6["neutral→neutral\nP ≈ 1.00"]
