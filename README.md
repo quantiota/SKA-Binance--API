@@ -194,12 +194,12 @@ The signal is symmetric — both LONG and SHORT are profitable. The only losing 
 ## Contents
 
 ```
-├── README.md           — documentation
-├── requirements.txt    — dependencies
-├── trading_bot.py      — PCT state machine, polls /ska_bot/{symbol}
-└── bot_monitor.py      — scans results, generates reports, sends email
+├── README.md                   — documentation
+├── structural_probability.md   — P band derivation and threshold reference
+├── requirements.txt            — dependencies
+├── trading_bot.py              — PCT state machine, polls /ticks/{symbol}
+└── bot_monitor.py              — scans results, generates reports, sends email
 ```
-
 
 
 ## Dashboard
