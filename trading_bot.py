@@ -101,6 +101,9 @@ BEAR_THRESHOLD = P_NEUTRAL_NEUTRAL - P_NEUTRAL_BEAR   # = 0.86
 DP_PAIR_BULL = P_NEUTRAL_BULL - P_X_NEUTRAL    # = 0.15
 DP_PAIR_BEAR = P_X_NEUTRAL   - P_NEUTRAL_BEAR  # = 0.37
 
+# SKA API key — required for /ska_bot/ endpoint
+SKA_API_KEY = os.environ.get('SKA_API_KEY', '')
+
 # Binance API — loaded lazily; validated in run() only when dry_run=False
 BINANCE_API_KEY          = os.environ.get('BINANCE_API_KEY')
 BINANCE_PRIVATE_KEY_PATH = os.environ.get('BINANCE_PRIVATE_KEY_PATH')
@@ -176,6 +179,7 @@ class TradingBot:
             r = requests.get(
                 f"{self.api_url}/ska_bot/{self.symbol}",
                 params={"since": self.last_trade_id},
+                headers={"X-API-Key": SKA_API_KEY},
                 timeout=5,
                 verify=False
             )
