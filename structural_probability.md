@@ -236,7 +236,7 @@ block-beta
 ```
  <br>
 
- # P Trajectory — Bull Trends on Probability Space
+ ## P Trajectory — Bull Trends on Probability Space
 ```mermaid 
      block-beta                                                                                                                                                 
     columns 12                                                                                                                                               
