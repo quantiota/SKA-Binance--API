@@ -235,7 +235,31 @@ block-beta
   class B3 bn
 ```
  <br>
- 
+
+ # P Trajectory — Bull Trends on Probability Space
+```mermaid 
+     block-beta                                                                                                                                                 
+    columns 12                                                                                                                                               
+    B4["neutral→neutral\nP ≈ 1.00"] B5["neutral→neutral\nP ≈ 1.00"] B6["neutral→neutral\nP ≈ 1.00"] B1["neutral→neutral\nP ≈ 1.00"] space space              
+  B10["neutral→neutral\nP ≈ 1.00"] B11["neutral→neutral\nP ≈ 1.00"] B12["neutral→neutral\nP ≈ 1.00"] B7["neutral→neutral\nP ≈ 1.00"] space space             
+    space:12                                                                                                                                               
+    space space space space B2["neutral→bull\nP ≈ 0.66"] space space space space space B8["neutral→bull\nP ≈ 0.66"] space                                    
+    space:12                                                                                                                                               
+    space space space space space B3["bull→neutral\nP ≈ 0.51"] space space space space space B9["bull→neutral\nP ≈ 0.51"]                                    
+                                                                                                                                                             
+    classDef nn fill:#c0d8ff,stroke:#999,color:#333                                                                                                          
+    classDef nb fill:#39cccc,stroke:#007c9e,color:#fff                                                                                                       
+    classDef bn fill:#ffdc00,stroke:#e6a800,color:#333                                                                                                       
+                                                                                                                                                           
+    class B1,B4,B5,B6,B7,B10,B11,B12 nn                                                                                                                      
+    class B2,B8 nb
+    class B3,B9 bn                                                                                                                                           
+                                                                                                                                                              
+                 
+ ```
+
+  <br>
+
 ## P Trajectory — Bear Cycle on Probability Space
 
 ```mermaid
@@ -255,6 +279,29 @@ block-beta
   class C2 nb2
   class C3 bn2
 ```
+ <br>
+ 
+## P Trajectory — Bear Trends on Probability Space
+
+```mermaid
+ block-beta                                                                                                                                                 
+    columns 12                                                                                                                                               
+    C4["neutral→neutral\nP ≈ 1.00"] C5["neutral→neutral\nP ≈ 1.00"] C6["neutral→neutral\nP ≈ 1.00"] C1["neutral→neutral\nP ≈ 1.00"] space space              
+  C10["neutral→neutral\nP ≈ 1.00"] C11["neutral→neutral\nP ≈ 1.00"] C12["neutral→neutral\nP ≈ 1.00"] C7["neutral→neutral\nP ≈ 1.00"] space space             
+    space:12                                                                                                                                               
+    space space space space space C3["bear→neutral\nP ≈ 0.51"] space space space space space C9["bear→neutral\nP ≈ 0.51"]                                    
+    space:12                                                                                                                                               
+    space space space space C2["neutral→bear\nP ≈ 0.14"] space space space space space C8["neutral→bear\nP ≈ 0.14"] space
+                                                                                                                                                             
+    classDef nn fill:#c0d8ff,stroke:#999,color:#333                                                                                                          
+    classDef nb2 fill:#f012be,stroke:#c00090,color:#fff                                                                                                      
+    classDef bn2 fill:#ff851b,stroke:#cc5500,color:#333                                                                                                      
+                                                                                                                                                           
+    class C1,C4,C5,C6,C7,C10,C11,C12 nn                                                                                                                      
+    class C2,C8 nb2
+    class C3,C9 bn2 
+
+  ```
 
 ## State Machine Diagram
 
