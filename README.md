@@ -79,14 +79,14 @@ flowchart TD
 
 **Base URL:** `https://api.quantiota.org`
 
-### `GET /ticks/{symbol}`
+### `GET /ska_bot/{symbol}`
 
-Returns the latest ticks with entropy for the given symbol.
+Returns pre-computed regime transitions for the given symbol. Regime classification is computed server-side.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `symbol`  | path | —       | Trading pair (`XRPUSDT`, `BTCUSDT`, `ETHUSDT`, `SOLUSDT`) |
-| `since`   | query | `0`   | Return only ticks with `trade_id > since` |
+| `since`   | query | `0`   | Return only transitions with `trade_id > since` |
 
 **Response**
 
@@ -95,13 +95,14 @@ Returns the latest ticks with entropy for the given symbol.
   "symbol": "XRPUSDT",
   "since": 0,
   "count": 3,
-  "ticks": [
+  "transitions": [
     {
       "trade_id": 1001,
       "timestamp": "2026-03-18T10:00:00.000000Z",
       "price": 2.3451,
-      "volume": 120.5,
-      "entropy": 0.182
+      "P": 0.1382,
+      "transition_code": 2,
+      "transition_name": "neutral→bear"
     }
   ]
 }
@@ -113,10 +114,17 @@ Returns the latest ticks with entropy for the given symbol.
 
 `bot_monitor.py` watches the folder for result CSVs, computes cumulative P&L after each new file, saves a report, and sends it by email.
 
+Set your credentials in `bot_monitor.py`:
+
+```python
+EMAIL_FROM         = "you@gmail.com"
+EMAIL_TO           = "you@gmail.com"
+GMAIL_APP_PASSWORD = "xxxx xxxx xxxx xxxx"
+```
+
+Then run:
+
 ```bash
-export GMAIL_APP_PASSWORD="xxxx xxxx xxxx xxxx"
-export GMAIL_FROM="your@gmail.com"
-export GMAIL_TO="your@gmail.com"
 python bot_monitor.py
 ```
 
@@ -133,7 +141,7 @@ pip install -r requirements.txt
 python trading_bot.py --symbol XRPUSDT
 ```
 
-The bot connects to `https://api.quantiota.org` by default and saves trades to a CSV file (`trading_bot_XRPUSDT_<timestamp>.csv`). The SKA-API restarts and resets every 3500 trades — the bot handles this transparently via the `since` parameter.
+The bot connects to `https://api.quantiota.org` by default and saves trades to a CSV file (`bot_results_v2_XRPUSDT_<timestamp>.csv`). The SKA-API restarts and resets every 3500 trades — the bot handles this transparently via the `since` parameter.
 
 **Arguments**
 
@@ -197,9 +205,25 @@ The signal is symmetric — both LONG and SHORT are profitable. The only losing 
 ├── README.md                   — documentation
 ├── structural_probability.md   — P band derivation and threshold reference
 ├── requirements.txt            — dependencies
-├── trading_bot.py              — PCT state machine, polls /ticks/{symbol}
+├── trading_bot.py              — PCT state machine, polls /ska_bot/{symbol}
 └── bot_monitor.py              — scans results, generates reports, sends email
 ```
+
+## Loop Options
+
+```bash
+# single run — one engine cycle (3500 ticks), good for testing
+python trading_bot.py --symbol XRPUSDT
+
+# continuous loop
+while true; do python trading_bot.py --symbol XRPUSDT; done
+
+# multi-symbol in parallel
+python trading_bot.py --symbol XRPUSDT &
+python trading_bot.py --symbol BTCUSDT &
+python trading_bot.py --symbol ETHUSDT &
+```
+
 
 
 ## Dashboard
