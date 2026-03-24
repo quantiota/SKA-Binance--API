@@ -213,6 +213,13 @@ The live measurement matches the theoretical constant to 3 decimal places.
 **Pending validation:**
 - Exchange independence (Binance → Coinbase)
 
+## P Trajectory — Trade Sequence
+
+```mermaid 
+block-beta
+  space:1
+  blockArrowId<["Trade Sequence&nbsp;&nbsp;&nbsp;"]>(right)
+```
 
 ## P Trajectory — Bull Cycle on Probability Space
 
@@ -225,7 +232,7 @@ block-beta
   space B2["neutral→bull\nP ≈ 0.66"] space space space space
   space:6
   space space B3["bull→neutral\nP ≈ 0.51"] space space space
-
+  
   classDef nn fill:#c0d8ff,stroke:#999,color:#333
   classDef nb fill:#39cccc,stroke:#007c9e,color:#fff
   classDef bn fill:#ffdc00,stroke:#e6a800,color:#333
@@ -233,6 +240,8 @@ block-beta
   class B1,B4,B5,B6 nn
   class B2 nb
   class B3 bn
+
+
 ```
  <br>
   <br>
