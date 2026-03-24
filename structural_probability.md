@@ -217,7 +217,6 @@ The live measurement matches the theoretical constant to 3 decimal places.
 
 ```mermaid 
 block-beta
-  space:1
   blockArrowId<["Trade Sequence&nbsp;&nbsp;&nbsp;"]>(right)
 ```
 
