@@ -214,6 +214,8 @@ The live measurement matches the theoretical constant to 3 decimal places.
 - Exchange independence (Binance → Coinbase)
 
 
+
+
 ## P Trajectory — Bull Cycle on Probability & Trade ID Sequence Space
 
 
@@ -307,6 +309,39 @@ block-beta
   ```
  <br>
   <br>
+
+
+## Regime Transition Matrices
+
+
+### Matrix 1 — Price-based regime
+
+Color legend: 🟢 price up · 🔴 price down · 🔘 price flat
+
+| from \ to   | neutral | bull | bear |
+|:------------|:-------:|:----:|:----:|
+| **neutral** | 🔘      | 🟢   | 🔴   |
+| **bull**    | 🔘      | 🟢   | 🔴   |
+| **bear**    | 🔘      | 🟢   | 🔴   |
+
+
+
+### Matrix 2 — Entropy-based regime
+
+bear→bull and bull→bear are rare: bypassing neutral requires a single large entropy shock — the full information cost paid in one tick.
+
+
+ Color = ΔH direction (inverted vs price) · 🟢🟢 / 🔴🔴 = direct jump (large ΔH) · 🟢 / 🔴 = gradual · 🔘 = ΔH ≈ 0
+
+| from \ to   | neutral | bull   | bear   |
+|:------------|:-------:|:------:|:------:|
+| **neutral** | 🔘      | 🔴     | 🟢     |
+| **bull**    | 🔘      | 🔴     | 🟢🟢   |
+| **bear**    | 🔘      | 🔴🔴   | 🟢     |
+
+   <br>
+  <br>
+
   
 ## State Machine Diagram
 
