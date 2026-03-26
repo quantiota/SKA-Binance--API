@@ -137,14 +137,14 @@ In the state machine it always passes through the neutral gap first, making it n
 
 ## 8. P Structural Constants — Tolerance Band
 
-P_curr structural values at convergence, with tolerance band for reference.
+P_curr structural values at convergence. Tolerance is proportional to P_curr: `tol = 3% × P_curr`.
 
-| Transition      | P_curr | Tolerance band          |
-|:----------------|:------:|:-----------------------:|
-| neutral→bull    | 0.66   | [0.66 − tol, 0.66 + tol] |
-| neutral→bear    | 0.14   | [0.14 − tol, 0.14 + tol] |
-| bull→neutral    | 0.51   | [0.51 − tol, 0.51 + tol] |
-| bear→neutral    | 0.51   | [0.51 − tol, 0.51 + tol] |
-| neutral→neutral | 1.00   | [1.00 − tol, 1.00]        |
+| Transition      | P_curr | tol = 3% × P_curr | Tolerance band    |
+|:----------------|:------:|:-----------------:|:-----------------:|
+| neutral→bull    | 0.66   | 0.020             | [0.640, 0.680]    |
+| neutral→bear    | 0.14   | 0.004             | [0.136, 0.144]    |
+| bull→neutral    | 0.51   | 0.015             | [0.495, 0.525]    |
+| bear→neutral    | 0.51   | 0.015             | [0.495, 0.525]    |
+| neutral→neutral | 1.00   | 0.030             | [0.970, 1.000]    |
 
-`tol` is a single tunable parameter. At full SKA convergence the bands are tight (live proof: ΔP_pair std ≈ ±0.004). Starting test value: tol = 0.025.
+Proportional tolerance ensures equal relative precision across all bands. Bear band (±0.004) is 5× tighter than bull band (±0.020) — reflecting the structural P_curr difference.
