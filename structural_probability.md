@@ -23,19 +23,20 @@ P is computed by the client from two consecutive `entropy` values returned by th
 Define the tick-level probability variation:
 
 ```
-δP_tick = P(n) − P(n−1)
+ΔP = P(n) − P(n−1)
 ```
 
-The regime at tick n is classified as:
+A transition is detected when ΔP falls inside the tolerance band centered on the structural value:
 
 ```
-δP_tick < −0.86                    →  bear    (large drop)
-−0.86  ≤  δP_tick  <  −0.34       →  bull    (moderate drop)
-δP_tick  ≥  −0.34                  →  neutral
+|ΔP − (−0.86)| ≤ tol  →  bear    (neutral→bear structural band)
+|ΔP − (−0.34)| ≤ tol  →  bull    (neutral→bull structural band)
+else                   →  neutral
+
+tol = 0.025  (tunable parameter)
 ```
 
-Both bull and bear are triggered by a negative δP_tick.
-The magnitude of the drop is the only distinction between them.
+Each transition maps to a unique ΔP structural value — detection is exact, not a one-sided threshold.
 
 
 
@@ -48,8 +49,7 @@ Define the paired transition gap:
 ΔP_pair = P(closing transition) − P(opening transition)
 ```
 
-ΔP_pair is not a tick-by-tick quantity. It is the change in P between the
-two regime ticks of the same pair.
+It is the change in P between the two detected transitions of the same pair.
 
 
 
@@ -90,7 +90,7 @@ The closing is an active recovery — the entropy shock has resolved.
 | Bull  | ≈ 0.66      | ≈ 0.51       | **−0.15**  | drift — P falls through |
 | Bear  | ≈ 0.14      | ≈ 0.51       | **+0.37**  | shock — P snaps back    |
 
-Both pairs open with a negative δP_tick.
+Both pairs open from neutral→neutral (P=1.00): neutral→bull at ΔP = −0.34, neutral→bear at ΔP = −0.86 — both negative.
 In the observed data, bull pairs satisfy `ΔP_pair < 0` while bear pairs satisfy
 `ΔP_pair > 0`. This empirical sign separation distinguishes a sustained entropy
 drift from a brief entropy shock.
@@ -158,11 +158,12 @@ the natural information-theoretic boundary between structured and random regimes
 
 ## Constants
 
-| Constant        | Value | Description                                      |
-|-----------------|-------|--------------------------------------------------|
-| BULL_THRESHOLD  | 0.34  | = P(neutral→neutral) − P(neutral→bull) = 1.00 − 0.66 |
-| BEAR_THRESHOLD  | 0.86  | = P(neutral→neutral) − P(neutral→bear) = 1.00 − 0.14 |
-| MIN_NEUTRAL_GAP | 3     | minimum neutral ticks before READY state         |
+| Constant        | Value | Description                                           |
+|-----------------|-------|-------------------------------------------------------|
+| DP_NEUTRAL_BULL | 0.34  | structural ΔP for neutral→bull = 1.00 − 0.66         |
+| DP_NEUTRAL_BEAR | 0.86  | structural ΔP for neutral→bear = 1.00 − 0.14         |
+| TOL             | 0.025 | tolerance band half-width for ΔP detection (tunable) |
+| MIN_NEUTRAL_GAP | 3     | minimum neutral ticks before READY state              |
 
 
 
@@ -187,13 +188,14 @@ the P bands converge to the same values.
 The thresholds and band positions are **universal constants** — they never need
 recalibration per asset:
 
-| Parameter       | Value |
-|-----------------|-------|
-| BULL_THRESHOLD  | 0.34  |
-| BEAR_THRESHOLD  | 0.86  |
-| P_NEUTRAL_BULL  | 0.66  |
-| P_X_NEUTRAL     | 0.51  |
-| P_NEUTRAL_BEAR  | 0.14  |
+| Parameter       | Value | Description                          |
+|-----------------|-------|--------------------------------------|
+| DP_NEUTRAL_BULL | 0.34  | structural ΔP center — neutral→bull  |
+| DP_NEUTRAL_BEAR | 0.86  | structural ΔP center — neutral→bear  |
+| TOL             | 0.025 | tolerance band half-width            |
+| P_NEUTRAL_BULL  | 0.66  | P value at neutral→bull              |
+| P_X_NEUTRAL     | 0.51  | P value at bull/bear→neutral         |
+| P_NEUTRAL_BEAR  | 0.14  | P value at neutral→bear              |
 
 ### Live proof
 
@@ -209,11 +211,6 @@ The live measurement matches the theoretical constant to 3 decimal places.
 **Confirmed independent of:**
 - Asset (XRPUSDT vs BTCUSDT — 60,000× price difference)
 - Exchange (Binance vs Coinbase)
-
-**Pending validation:**
-- Exchange independence (Binance → Coinbase)
-
-
 
 
 ## P Trajectory — Bull Cycle on Probability & Trade ID Sequence Space
@@ -311,7 +308,7 @@ block-beta
   <br>
 
 
-## Regime Transition Matrices
+  ## Regime Transition Matrices
 
 
 ### Matrix 1 — Price-based regime
@@ -324,14 +321,13 @@ Color legend: 🟢 price up · 🔴 price down · 🔘 price flat
 | **bull**    | 🔘      | 🟢   | 🔴   |
 | **bear**    | 🔘      | 🟢   | 🔴   |
 
-
+---
 
 ### Matrix 2 — Entropy-based regime
 
-bear→bull and bull→bear are rare: bypassing neutral requires a single large entropy shock — the full information cost paid in one tick.
+Color = ΔH direction (inverted vs price) · 🟢🟢 / 🔴🔴 = direct jump (large ΔH) · 🟢 / 🔴 = gradual · 🔘 = ΔH ≈ 0
 
-
- Color = ΔH direction (inverted vs price) · 🟢🟢 / 🔴🔴 = direct jump (large ΔH) · 🟢 / 🔴 = gradual · 🔘 = ΔH ≈ 0
+> bear→bull and bull→bear are rare: bypassing neutral requires a single large entropy shock — the full information cost paid in one tick.
 
 | from \ to   | neutral | bull   | bear   |
 |:------------|:-------:|:------:|:------:|
@@ -339,9 +335,7 @@ bear→bull and bull→bear are rare: bypassing neutral requires a single large 
 | **bull**    | 🔘      | 🔴     | 🟢🟢   |
 | **bear**    | 🔘      | 🔴🔴   | 🟢     |
 
-   <br>
-  <br>
-
+  
   
 ## State Machine Diagram
 
@@ -352,9 +346,9 @@ flowchart TD
 
     P --> DP
 
-    DP -->|"ΔP ≥ -0.34"| N["regime = 0\nneutral"]
-    DP -->|"-0.86 ≤ ΔP < -0.34"| B["regime = 1\nbull"]
-    DP -->|"ΔP < -0.86"| R["regime = 2\nbear"]
+    DP -->|"|ΔP−(−0.34)|≤tol"| B["regime = 1\nbull"]
+    DP -->|"|ΔP−(−0.86)|≤tol"| R["regime = 2\nbear"]
+    DP -->|"else"| N["regime = 0\nneutral"]
 
     N -->|"prev=0 curr=0"| T0["neutral→neutral\nP ≈ 1.00"]
     N -->|"prev=1 curr=0"| T1["bull→neutral\nP ≈ 0.51"]
