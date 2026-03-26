@@ -336,7 +336,8 @@ Color = ΔH direction (inverted vs price) · 🟢🟢 / 🔴🔴 = direct jump (
 | **bear**    | 🔘      | 🔴🔴   | 🟢     |
 
   
-  
+
+
 ## State Machine Diagram
 
 ```mermaid
@@ -356,9 +357,11 @@ flowchart TD
 
     B -->|"prev=0 curr=1"| T3["neutral→bull\nP ≈ 0.66"]
     B -->|"prev=1 curr=1"| T4["bull→bull"]
+    B -->|"prev=2 curr=1"| DJ2["bear→bull\nIGNORED — direct jump"]
 
     R -->|"prev=0 curr=2"| T5["neutral→bear\nP ≈ 0.14"]
     R -->|"prev=2 curr=2"| T6["bear→bear"]
+    R -->|"prev=1 curr=2"| DJ1["bull→bear\nIGNORED — direct jump"]
 
     T3 -->|"OPEN LONG"| WAIT_PAIR_L["WAIT_PAIR\nLONG"]
     T5 -->|"OPEN SHORT"| WAIT_PAIR_S["WAIT_PAIR\nSHORT"]
