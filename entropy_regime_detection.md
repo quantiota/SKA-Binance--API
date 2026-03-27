@@ -1,22 +1,28 @@
-# Trading Bot v2 — Dev Analysis & Improvement Proposal
+# Trading Bot v3 — Dev Analysis & Improvement Proposal
 
 ## 1. How the Bot Classifies Regime — Transition Detection
 
 P(n) = exp(−|ΔH/H|),  ΔP = P(n) − P(n−1)
 
-A transition is detected when ΔP falls inside the band centered on the structural value (see **Section 8**):
+Regime is detected when ΔP falls inside the tolerance band centered on the structural value (see **Section 8** for tolerance values):
 
 ```
-ΔP ∈ [−0.34 − tol, −0.34 + tol]  →  neutral→bull
-ΔP ∈ [−0.86 − tol, −0.86 + tol]  →  neutral→bear
-ΔP ∈ [−0.15 − tol, −0.15 + tol]  →  bull→neutral
-ΔP ∈ [+0.37 − tol, +0.37 + tol]  →  bear→neutral
-ΔP ∈ [−tol,        +tol]          →  neutral→neutral
-
-tol = 0.025  (tunable parameter)
+|ΔP − (−0.34)| ≤ TOL_BULL  →  regime = bull    (TOL_BULL = 0.020)
+|ΔP − (−0.86)| ≤ TOL_BEAR  →  regime = bear    (TOL_BEAR = 0.004)
+else                        →  regime = neutral
 ```
 
-The transition name determines the bot action — not a one-sided threshold.
+The full transition name is derived from `prev_regime × 3 + regime`:
+
+```
+prev=neutral, curr=bull    →  neutral→bull    (code 1)
+prev=neutral, curr=bear    →  neutral→bear    (code 2)
+prev=bull,    curr=neutral →  bull→neutral    (code 3)
+prev=bear,    curr=neutral →  bear→neutral    (code 6)
+prev=neutral, curr=neutral →  neutral→neutral (code 0)
+```
+
+Tolerance is **proportional** to the structural P value of each band — not a flat value. The transition name determines the bot action.
 
 ---
 
@@ -59,7 +65,7 @@ Each state machine event corresponds to a specific cell in the 9×9 matrix — d
 | bear→neutral        | neutral→bear        | −0.37   |
 
 Key insight: **the same transition can have different ΔP depending on context**.
-`neutral→bull` has ΔP = −0.34 after neutral→neutral (OPEN LONG) but ΔP = +0.15 after bull→neutral (CYCLE REPEAT). The ΔP band detection in section 1 distinguishes these two cases.
+`neutral→bull` has ΔP = −0.34 after neutral→neutral (OPEN LONG) but would have ΔP = +0.15 after a direct bull→neutral (hypothetical CYCLE REPEAT). However, Section 4 confirms that direct cycle repeat (pair #5) does not occur in live data — the market always passes through a neutral gap first. So in practice CYCLE REPEAT always has ΔP = −0.34, identical to OPEN LONG. The **state machine** (`exit_state == READY`) is what distinguishes them, not the ΔP band.
 
 ---
 
