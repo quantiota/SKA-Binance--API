@@ -13,6 +13,12 @@ The market is a deterministic process in probability space — not in price spac
 ## Architecture
 
 ```mermaid
+---
+config:
+  look: classic
+  theme: base
+  layout: elk
+---
 flowchart TD
     BINANCE[(Binance Tick Data)]
     API["SKA API"]
