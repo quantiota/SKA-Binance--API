@@ -5,9 +5,9 @@ Regime definition:
   P(n)    = exp(-|ΔH/H|)   where  ΔH/H = (H(n) - H(n-1)) / H(n)
   δP_tick = P(n) - P(n-1)  consecutive change in probability
 
-  δP_tick < -BEAR_THRESHOLD                    →  bear    (large P drop)
-  -BEAR_THRESHOLD ≤ δP_tick < -BULL_THRESHOLD  →  bull    (moderate P drop)
-  δP_tick ≥ -BULL_THRESHOLD                    →  neutral
+  |ΔP(n) − (−0.86)| ≤ K × 0.14  →  regime = 2  ("bear"    — neutral→bear, tol=0.004)
+  |ΔP(n) − (−0.34)| ≤ K × 0.66  →  regime = 1  ("bull"    — neutral→bull, tol=0.020)
+  else                             →  regime = 0  (neutral)
 
   P band positions — universal constants at convergence scale (asset-independent):
     P_NEUTRAL_NEUTRAL = 1.00
@@ -50,9 +50,9 @@ Execution model (spot only — no margin/futures):
   Signal source: SKA API at api.quantiota.org — proprietary engine, transitions only.
 
 Usage:
-    python trading_bot.py --symbol XRPUSDT                        # dry run
-    python trading_bot.py --symbol XRPUSDC --live                 # live trading
-    python trading_bot.py --symbol BTCUSDT --api https://api.quantiota.org
+    python client_trading_bot.py --symbol XRPUSDT                        # dry run
+    python client_trading_bot.py --symbol XRPUSDC --live                 # live trading
+    python client_trading_bot.py --symbol BTCUSDT --api https://api.quantiota.org
 """
 
 import argparse
@@ -82,16 +82,25 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(mess
 
 VERSION         = 2          # ← change this to switch between bot versions
 SYMBOL          = "XRPUSDT"
-MIN_NEUTRAL_GAP = 3          # Structural filter — do not change unless you know why
+MIN_NN_COUNT    = 3          # Structural filter — do not change unless you know why
 API_URL         = "https://api.quantiota.org"
 POLL_INTERVAL   = 1.0        # seconds
 ENGINE_RESET_AT = 3500       # SKA engine resets every 3500 trades
+DP_PAIR_CUTOFF  = 3200       # stop recording ΔP_pair before engine reset
+
+RESULTS_DIR     = 'bot_results_v2'
 
 # P band positions — universal constants at convergence scale, confirmed XRPUSDT+BTCUSDT
 P_NEUTRAL_NEUTRAL = 1.00
 P_NEUTRAL_BULL    = 0.66
 P_X_NEUTRAL       = 0.51   # bull→neutral = bear→neutral
 P_NEUTRAL_BEAR    = 0.14
+
+# Proportional tolerance: tol per transition = K × P_curr_structural
+K        = 0.03
+TOL_BEAR  = K * 0.14   # = 0.0042  neutral→bear band
+TOL_BULL  = K * 0.66   # = 0.0198  neutral→bull band
+TOL_CLOSE = K * 0.51   # = 0.0153  bull→neutral = bear→neutral band
 
 # Thresholds derived from P band positions
 BULL_THRESHOLD = P_NEUTRAL_NEUTRAL - P_NEUTRAL_BULL   # = 0.34
@@ -136,10 +145,12 @@ class Position:
     entry_transition:      str
     exit_state:            str = field(default=WAIT_PAIR)
     neutral_neutral_count: int = field(default=0)
+    bull_pair_count:       int = field(default=0)
+    bear_pair_count:       int = field(default=0)
 
 
 class TradingBot:
-    """SKA paired cycle trading bot — regime classified from ΔP where P = exp(-|ΔH/H|).
+    """SKA paired cycle trading bot v2 — regime classified from ΔP tolerance bands where P = exp(-|ΔH/H|).
 
     Execution model (spot only — no margin/futures):
       LONG open  (neutral→bull, or SHORT close → re-enter) : BUY on exchange
@@ -154,22 +165,30 @@ class TradingBot:
         self.poll_interval = poll_interval
         self.dry_run       = dry_run
         self.position: Optional[Position] = None
-        self.last_trade_id = 0
+        self.last_trade_id = None
         self.tick_count    = 0   # counts processed transitions; resets with engine
         self._private_key  = None
         self._lot_filter   = None   # populated in run() when dry_run=False
 
-        self.total_trades  = 0
-        self.winners       = 0
-        self.losers        = 0
+        self.total_trades   = 0
+        self.winning_trades = 0
+        self.losing_trades  = 0
 
         # PnL split: LONG = real spot execution, SHORT = synthetic signal tracking
         self.spot_pnl      = 0.0   # realized from real exchange LONGs only
         self.synthetic_pnl = 0.0   # synthetic SHORTs — no exchange orders
         self._csv_written  = False
 
+        # ΔP_pair tracking
+        self._last_open_name  = None
+        self._last_open_P     = None
+        self._already_long    = False  # BUY already on exchange after CLOSE_SHORT
+        self._dp_pair_written = False
+        self._entropy_count   = 0
+
         ts = datetime.now().strftime('%Y%m%d_%H%M%S')
-        self.results_file = f'bot_results_v{VERSION}_{symbol}_{ts}.csv'
+        self.results_file = f'{RESULTS_DIR}/bot_results_v{VERSION}_{symbol}_{ts}.csv'
+        self.dp_pair_file = f'{RESULTS_DIR}/dp_pair_v{VERSION}_{symbol}_{ts}.csv'
 
     # ── SKA API ───────────────────────────────────────────────────────────────
 
@@ -178,7 +197,7 @@ class TradingBot:
         try:
             r = requests.get(
                 f"{self.api_url}/ska_bot/{self.symbol}",
-                params={"since": self.last_trade_id},
+                params={"since": self.last_trade_id or 0},
                 headers={"X-API-Key": SKA_API_KEY},
                 timeout=5,
                 verify=False
@@ -232,7 +251,9 @@ class TradingBot:
             return qty
         f = self._lot_filter
         step = f['step_size']
+        # floor to step size using integer arithmetic to avoid float drift
         qty = math.floor(qty / step) * step
+        # round to the number of decimals in stepSize string
         step_str = f['step_str'].rstrip('0')
         decimals = len(step_str.split('.')[1]) if '.' in step_str else 0
         qty = round(qty, decimals)
@@ -295,185 +316,295 @@ class TradingBot:
         logging.info(f"[EXECUTE] SELL {self.symbol} @ {price:.6f} qty={qty}")
         return self._binance_order('SELL', qty)
 
+    # ── ΔP_pair recording ─────────────────────────────────────────────────────
+
+    def _record_dp_pair(self, pair_type, p1, p2):
+        # p1 = P at opening transition (neutral→bull or neutral→bear)
+        # p2 = P at closing transition (bull→neutral or bear→neutral)
+        # ΔP_pair = p2 - p1 → negative for bull, positive for bear
+        if p1 is None or p2 is None:
+            return
+        dp = p2 - p1
+        row = {
+            'pair_type': pair_type,
+            'p1':        round(p1, 4),
+            'p2':        round(p2, 4),
+            'dp_pair':   round(dp, 4),
+        }
+        with open(self.dp_pair_file, 'a', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=row.keys())
+            if not self._dp_pair_written:
+                writer.writeheader()
+                self._dp_pair_written = True
+            writer.writerow(row)
+        logging.info(f"ΔP_pair [{pair_type}] P={p1:.4f}→{p2:.4f} ΔP={dp:+.4f}")
+
     # ── State machine ─────────────────────────────────────────────────────────
 
-    def process(self, transition):
+    def process_signal(self, transition):
         trade_id = transition['trade_id']
         price    = transition['price']
         name     = transition['transition_name']
         P        = transition['P']
         ts       = transition['timestamp']
-        p_str    = f"{P:.4f}" if P is not None else "n/a"
+
+        if self.last_trade_id is not None and trade_id <= self.last_trade_id:
+            return
+        self.last_trade_id = trade_id
+
+        # Direct jumps (bull→bear, bear→bull) are localized entropy shocks — mean-reversion expected
+        # Do NOT react — keep position open through the spike
+        if name in ('bull→bear', 'bear→bull'):
+            logging.info(f"--- Direct jump {name} ignored (localized entropy shock) | trade_id={trade_id}")
+            return
+
+        # ΔP_pair: gap within paired transition neutral→bull→neutral or neutral→bear→neutral
+        # ΔP = P(closing) − P(opening) → negative for bull, positive for bear
+        PAIR_CLOSE = {'neutral→bull': 'bull→neutral', 'neutral→bear': 'bear→neutral'}
+        if name in ('neutral→bull', 'neutral→bear'):
+            self._last_open_name = name
+            self._last_open_P    = P
+        elif (name in ('bull→neutral', 'bear→neutral') and
+              self._last_open_name is not None and
+              PAIR_CLOSE.get(self._last_open_name) == name and
+              self._entropy_count < DP_PAIR_CUTOFF):
+            pair_type = 'bull' if name == 'bull→neutral' else 'bear'
+            self._record_dp_pair(pair_type, self._last_open_P, P)
+            if self.position is not None:
+                if pair_type == 'bull':
+                    self.position.bull_pair_count += 1
+                else:
+                    self.position.bear_pair_count += 1
+            self._last_open_name = None
+            self._last_open_P    = None
+
+        p_str = f"{P:.4f}" if P is not None else "n/a"
 
         # === NO POSITION: look for entry ===
         if self.position is None:
             if name == 'neutral→bull':
-                if not self.dry_run:
+                if not self.dry_run and not self._already_long:
                     if not self._execute_buy(price):
                         logging.error("[ORDER] BUY failed — LONG not opened")
                         return
-                self.position = Position('LONG', price, trade_id, ts, name)
-                logging.info(f">>> OPEN LONG  @ {price:.6f} | P={p_str} | trade_id={trade_id}")
+                self._already_long = False
+                self.position = Position(
+                    side='LONG', entry_price=price,
+                    entry_trade_id=trade_id, entry_time=str(ts),
+                    entry_transition=name, exit_state=WAIT_PAIR
+                )
+                logging.info(
+                    f">>> OPEN LONG @ {price:.6f} | P={p_str} | trade_id={trade_id} "
+                    f"| waiting: bull→neutral"
+                )
             elif name == 'neutral→bear':
-                self.position = Position('SHORT', price, trade_id, ts, name)
-                # No exchange order: SHORT tracked synthetically only
-                logging.info(f">>> OPEN SHORT @ {price:.6f} | P={p_str} | trade_id={trade_id}")
+                self.position = Position(
+                    side='SHORT', entry_price=price,
+                    entry_trade_id=trade_id, entry_time=str(ts),
+                    entry_transition=name, exit_state=WAIT_PAIR
+                )
+                logging.info(
+                    f">>> OPEN SHORT @ {price:.6f} | P={p_str} | trade_id={trade_id} "
+                    f"| waiting: bear→neutral"
+                )
+                # No exchange order: spot cannot short-sell — SHORT tracked synthetically only
             return
 
-        pos = self.position
-
         # === LONG POSITION ===
-        if pos.side == 'LONG':
+        if self.position.side == 'LONG':
 
-            if pos.exit_state == WAIT_PAIR:
+            if self.position.exit_state == WAIT_PAIR:
                 if name == 'bull→neutral':
-                    pos.exit_state = IN_NEUTRAL
-                    logging.info(f"--- LONG pair confirmed | IN_NEUTRAL | trade_id={trade_id}")
+                    self.position.exit_state = IN_NEUTRAL
+                    logging.info(
+                        f"--- UP pair confirmed (bull→neutral) @ {price:.6f} "
+                        f"| IN_NEUTRAL | trade_id={trade_id}"
+                    )
 
-            elif pos.exit_state == IN_NEUTRAL:
+            elif self.position.exit_state == IN_NEUTRAL:
                 if name == 'neutral→neutral':
-                    pos.neutral_neutral_count += 1
+                    self.position.neutral_neutral_count += 1
+                    logging.info(
+                        f"--- Neutral gap nn_count={self.position.neutral_neutral_count} @ {price:.6f} "
+                        f"| IN_NEUTRAL | trade_id={trade_id}"
+                    )
                 else:
-                    if pos.neutral_neutral_count >= MIN_NEUTRAL_GAP:
-                        pos.exit_state = READY
+                    if self.position.neutral_neutral_count >= MIN_NN_COUNT:
+                        self.position.exit_state = READY
                         logging.info(
-                            f"--- LONG gap closed ({name}) | READY "
-                            f"| nn={pos.neutral_neutral_count} | trade_id={trade_id}"
+                            f"--- Neutral gap closed ({name}) @ {price:.6f} "
+                            f"| READY | nn_count={self.position.neutral_neutral_count} | trade_id={trade_id}"
                         )
                     else:
-                        pos.neutral_neutral_count = 0
+                        logging.info(
+                            f"--- Neutral gap too short nn_count={self.position.neutral_neutral_count} "
+                            f"(min={MIN_NN_COUNT}) — reset | trade_id={trade_id}"
+                        )
+                        self.position.neutral_neutral_count = 0
 
-            elif pos.exit_state == READY:
+            elif self.position.exit_state == READY:
                 if name == 'neutral→bull':
-                    pos.exit_state = WAIT_PAIR
-                    pos.neutral_neutral_count = 0
-                    logging.info(f"--- LONG cycle repeat | WAIT_PAIR | trade_id={trade_id}")
+                    self.position.exit_state = WAIT_PAIR
+                    self.position.neutral_neutral_count = 0
+                    logging.info(
+                        f"--- UP cycle repeating (neutral→bull) @ {price:.6f} "
+                        f"| WAIT_PAIR | trade_id={trade_id}"
+                    )
                 elif name == 'neutral→bear':
-                    pos.exit_state = EXIT_WAIT
-                    logging.info(f"--- LONG opposite open | EXIT_WAIT | trade_id={trade_id}")
+                    self.position.exit_state = EXIT_WAIT
+                    logging.info(
+                        f"--- Opposite cycle opening (neutral→bear) @ {price:.6f} "
+                        f"| EXIT_WAIT | trade_id={trade_id}"
+                    )
 
-            elif pos.exit_state == EXIT_WAIT:
-                if name == 'bear→neutral':
+            elif self.position.exit_state == EXIT_WAIT:
+                if name == 'bear→neutral' and P is not None and abs(P - P_X_NEUTRAL) <= TOL_CLOSE:
                     if not self.dry_run:
                         if not self._execute_sell(price):
                             logging.error("[ORDER] SELL failed — LONG not closed")
                             return
-                    pnl = price - pos.entry_price
-                    pnl_pct = (pnl / pos.entry_price) * 100
-                    self._record(pnl, pnl_pct, price)
+                    pnl = price - self.position.entry_price
+                    pnl_pct = (pnl / self.position.entry_price) * 100
+                    self._record_trade(pnl, pnl_pct, price)
                     logging.info(
-                        f"<<< CLOSE LONG @ {price:.6f} | "
-                        f"PnL={pnl*10000:+.1f} pips ({pnl_pct:+.4f}%)"
+                        f"<<< CLOSE LONG (bear→neutral) @ {price:.6f} | "
+                        f"PnL={pnl:+.6f} ({pnl_pct:+.4f}%) | entry={self.position.entry_price:.6f}"
                     )
-                    self.position = Position('SHORT', price, trade_id, ts, 'neutral→bear')
-                    # No exchange order: SHORT tracked synthetically — BUY re-enters LONG when SHORT closes
-                    logging.info(f">>> OPEN SHORT @ {price:.6f} | trade_id={trade_id}")
+                    self.position = None
                 elif name == 'neutral→bull':
-                    pos.exit_state = WAIT_PAIR
-                    pos.neutral_neutral_count = 0
-                    logging.info(f"--- LONG bear aborted | WAIT_PAIR | trade_id={trade_id}")
+                    self.position.exit_state = WAIT_PAIR
+                    self.position.neutral_neutral_count = 0
+                    logging.info(
+                        f"--- Bear cycle aborted (neutral→bull) @ {price:.6f} "
+                        f"| WAIT_PAIR | still LONG | trade_id={trade_id}"
+                    )
 
         # === SHORT POSITION ===
-        elif pos.side == 'SHORT':
+        elif self.position.side == 'SHORT':
 
-            if pos.exit_state == WAIT_PAIR:
+            if self.position.exit_state == WAIT_PAIR:
                 if name == 'bear→neutral':
-                    pos.exit_state = IN_NEUTRAL
-                    logging.info(f"--- SHORT pair confirmed | IN_NEUTRAL | trade_id={trade_id}")
+                    self.position.exit_state = IN_NEUTRAL
+                    logging.info(
+                        f"--- DOWN pair confirmed (bear→neutral) @ {price:.6f} "
+                        f"| IN_NEUTRAL | trade_id={trade_id}"
+                    )
 
-            elif pos.exit_state == IN_NEUTRAL:
+            elif self.position.exit_state == IN_NEUTRAL:
                 if name == 'neutral→neutral':
-                    pos.neutral_neutral_count += 1
+                    self.position.neutral_neutral_count += 1
+                    logging.info(
+                        f"--- Neutral gap nn_count={self.position.neutral_neutral_count} @ {price:.6f} "
+                        f"| IN_NEUTRAL | trade_id={trade_id}"
+                    )
                 else:
-                    if pos.neutral_neutral_count >= MIN_NEUTRAL_GAP:
-                        pos.exit_state = READY
+                    if self.position.neutral_neutral_count >= MIN_NN_COUNT:
+                        self.position.exit_state = READY
                         logging.info(
-                            f"--- SHORT gap closed ({name}) | READY "
-                            f"| nn={pos.neutral_neutral_count} | trade_id={trade_id}"
+                            f"--- Neutral gap closed ({name}) @ {price:.6f} "
+                            f"| READY | nn_count={self.position.neutral_neutral_count} | trade_id={trade_id}"
                         )
                     else:
-                        pos.neutral_neutral_count = 0
+                        logging.info(
+                            f"--- Neutral gap too short nn_count={self.position.neutral_neutral_count} "
+                            f"(min={MIN_NN_COUNT}) — reset | trade_id={trade_id}"
+                        )
+                        self.position.neutral_neutral_count = 0
 
-            elif pos.exit_state == READY:
+            elif self.position.exit_state == READY:
                 if name == 'neutral→bear':
-                    pos.exit_state = WAIT_PAIR
-                    pos.neutral_neutral_count = 0
-                    logging.info(f"--- SHORT cycle repeat | WAIT_PAIR | trade_id={trade_id}")
+                    self.position.exit_state = WAIT_PAIR
+                    self.position.neutral_neutral_count = 0
+                    logging.info(
+                        f"--- DOWN cycle repeating (neutral→bear) @ {price:.6f} "
+                        f"| WAIT_PAIR | trade_id={trade_id}"
+                    )
                 elif name == 'neutral→bull':
-                    pos.exit_state = EXIT_WAIT
-                    logging.info(f"--- SHORT opposite open | EXIT_WAIT | trade_id={trade_id}")
+                    self.position.exit_state = EXIT_WAIT
+                    logging.info(
+                        f"--- Opposite cycle opening (neutral→bull) @ {price:.6f} "
+                        f"| EXIT_WAIT | trade_id={trade_id}"
+                    )
 
-            elif pos.exit_state == EXIT_WAIT:
-                if name == 'bull→neutral':
+            elif self.position.exit_state == EXIT_WAIT:
+                if name == 'bull→neutral' and P is not None and abs(P - P_X_NEUTRAL) <= TOL_CLOSE:
                     if not self.dry_run:
                         if not self._execute_buy(price):
                             logging.error("[ORDER] BUY failed — SHORT not closed / LONG not re-entered")
                             return
-                    pnl = pos.entry_price - price
-                    pnl_pct = (pnl / pos.entry_price) * 100
-                    self._record(pnl, pnl_pct, price)
+                    pnl = self.position.entry_price - price
+                    pnl_pct = (pnl / self.position.entry_price) * 100
+                    self._record_trade(pnl, pnl_pct, price)
                     logging.info(
-                        f"<<< CLOSE SHORT @ {price:.6f} | "
-                        f"PnL={pnl*10000:+.1f} pips ({pnl_pct:+.4f}%)"
+                        f"<<< CLOSE SHORT (bull→neutral) @ {price:.6f} | "
+                        f"PnL={pnl:+.6f} ({pnl_pct:+.4f}%) | entry={self.position.entry_price:.6f}"
                     )
-                    self.position = Position('LONG', price, trade_id, ts, 'neutral→bull')
-                    # No exchange order for OPEN LONG here — BUY already fired above to re-enter LONG inventory
-                    logging.info(f">>> OPEN LONG  @ {price:.6f} | trade_id={trade_id}")
+                    self._already_long = True
+                    self.position = None
                 elif name == 'neutral→bear':
-                    pos.exit_state = WAIT_PAIR
-                    pos.neutral_neutral_count = 0
-                    logging.info(f"--- SHORT bull aborted | WAIT_PAIR | trade_id={trade_id}")
+                    self.position.exit_state = WAIT_PAIR
+                    self.position.neutral_neutral_count = 0
+                    logging.info(
+                        f"--- Bull cycle aborted (neutral→bear) @ {price:.6f} "
+                        f"| WAIT_PAIR | still SHORT | trade_id={trade_id}"
+                    )
 
     # ── Recording ─────────────────────────────────────────────────────────────
 
-    def _record(self, pnl, pnl_pct, exit_price):
+    def _record_trade(self, pnl, pnl_pct, exit_price):
         self.total_trades += 1
         if pnl > 0:
-            self.winners += 1
+            self.winning_trades += 1
         else:
-            self.losers += 1
+            self.losing_trades += 1
 
-        is_real = (self.position.side == 'LONG')
+        # Route PnL to the correct bucket
+        is_real = (self.position.side == 'LONG')   # LONGs are backed by real exchange orders
         if is_real:
             self.spot_pnl += pnl
         else:
             self.synthetic_pnl += pnl
 
-        row = {
+        trade = {
             'side':             self.position.side,
             'real':             is_real,
             'entry':            self.position.entry_price,
             'exit':             exit_price,
             'pnl':              pnl,
             'entry_transition': self.position.entry_transition,
+            'bull_pairs':       self.position.bull_pair_count,
+            'bear_pairs':       self.position.bear_pair_count,
         }
         with open(self.results_file, 'a', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=row.keys())
+            writer = csv.DictWriter(f, fieldnames=[
+                'side', 'real', 'entry', 'exit', 'pnl', 'entry_transition', 'bull_pairs', 'bear_pairs'
+            ])
             if not self._csv_written:
                 writer.writeheader()
                 self._csv_written = True
-            writer.writerow(row)
+            writer.writerow(trade)
 
     def print_stats(self):
-        wr       = self.winners / self.total_trades * 100 if self.total_trades else 0
+        win_rate = (self.winning_trades / self.total_trades * 100) if self.total_trades > 0 else 0
         combined = self.spot_pnl + self.synthetic_pnl
         logging.info(
-            f"=== Trades={self.total_trades} | W={self.winners} L={self.losers} | "
-            f"Win={wr:.1f}% | "
-            f"Spot PnL (real): {self.spot_pnl*10000:+.1f} pips | "
-            f"Synthetic PnL: {self.synthetic_pnl*10000:+.1f} pips | "
-            f"Combined: {combined*10000:+.1f} pips"
+            f"=== STATS === Trades: {self.total_trades} | "
+            f"Win: {self.winning_trades} | Lose: {self.losing_trades} | "
+            f"Win rate: {win_rate:.1f}% | "
+            f"Spot PnL (real): {self.spot_pnl:+.6f} | "
+            f"Synthetic PnL: {self.synthetic_pnl:+.6f} | "
+            f"Combined signal PnL: {combined:+.6f}"
         )
 
     # ── Main loop ─────────────────────────────────────────────────────────────
 
     def run(self):
         logging.info(
-            f"SKA Trading Bot | symbol={self.symbol} | api={self.api_url} | "
+            f"SKA Trading Bot v{VERSION} | symbol={self.symbol} | api={self.api_url} | "
             f"dry_run={self.dry_run}"
         )
-        logging.info(f"MIN_NEUTRAL_GAP={MIN_NEUTRAL_GAP} | ENGINE_RESET_AT={ENGINE_RESET_AT}")
-        logging.info(f"BULL_THRESHOLD={BULL_THRESHOLD} | BEAR_THRESHOLD={BEAR_THRESHOLD}")
+        logging.info(f"MIN_NN_COUNT={MIN_NN_COUNT} | ENGINE_RESET_AT={ENGINE_RESET_AT} | K={K}")
+        logging.info(f"TOL_BULL={TOL_BULL:.4f} | TOL_BEAR={TOL_BEAR:.4f} | TOL_CLOSE={TOL_CLOSE:.4f}")
 
         if not self.dry_run:
             if not BINANCE_API_KEY:
@@ -488,10 +619,9 @@ class TradingBot:
             while True:
                 transitions = self.fetch_transitions()
                 for t in transitions:
-                    self.process(t)
-                    self.tick_count += 1
-                if transitions:
-                    self.last_trade_id = transitions[-1]['trade_id']
+                    self.process_signal(t)
+                    self.tick_count     += 1
+                    self._entropy_count += 1
 
                 if self.tick_count >= ENGINE_RESET_AT:
                     logging.info(f"Auto-stop: {self.tick_count} ticks >= {ENGINE_RESET_AT}")
@@ -520,16 +650,18 @@ class TradingBot:
                 else:
                     pnl = self.position.entry_price - close_price
                 pnl_pct = (pnl / self.position.entry_price) * 100
-                self._record(pnl, pnl_pct, close_price)
+                self._record_trade(pnl, pnl_pct, close_price)
                 logging.info(
                     f"<<< CLOSE {self.position.side} (end of run) @ {close_price:.6f} | "
-                    f"PnL={pnl*10000:+.1f} pips | exit_state={self.position.exit_state}"
+                    f"PnL={pnl:+.6f} ({pnl_pct:+.4f}%) | exit_state={self.position.exit_state}"
                 )
                 self.position = None
             self.print_stats()
 
 
 if __name__ == '__main__':
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+
     parser = argparse.ArgumentParser(description='SKA Paired Cycle Trading Bot')
     parser.add_argument('--symbol', default=SYMBOL,         help='Trading pair (default: XRPUSDT)')
     parser.add_argument('--api',    default=API_URL,         help='SKA-API base URL')
