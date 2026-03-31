@@ -23,11 +23,13 @@ config:
 ---
 flowchart TD
     BINANCE[(Binance <br/> Raw Tick Data)]
+    ENGINE[SKA Engine]
     API["SKA API"]
     BOT@{ shape: diamond, label: "Trading Bot" }
 
-    BINANCE -- "symbol" --> API
-    API -- "entropy" --> BOT
+    BINANCE -- "symbol" --> ENGINE
+    API -- "regime transitions" --> BOT
+    ENGINE -- "entropy" --> API
 
     BOT --> LONG
     BOT --> SHORT
@@ -63,7 +65,9 @@ flowchart TD
     classDef neutral   fill:#E8E8E8,stroke:#AAAAAA,color:#000,stroke-width:1.5px;
 
     class BINANCE data;
+    class ENGINE process;
     class API,BOT process;
+
     class L1 longOpen;
     class L2 longPair;
     class L3 neutral;
