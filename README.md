@@ -17,7 +17,7 @@ These transitions are not random. Their probability distribution is remarkably s
 ### Why This Matters
 
 - The heavy entropy computation runs on a powerful backend server (heavy matrix computation, entropy learning, 3500 ticks per loop )
-- The lightweight execution engine (poll API, state machine, decision logic, and order placement) runs efficiently on a **Raspberry Pi** via the [Raspberry-Pi-AI-Agent-Host](https://github.com/quantiota/Raspberry-Pi-AI-Agent-Host)
+- The lightweight execution layer (poll API, state machine, decision logic, and order placement) runs efficiently on a **Raspberry Pi** via the [Raspberry-Pi-AI-Agent-Host](https://github.com/quantiota/Raspberry-Pi-AI-Agent-Host)
 - The system is designed for **live trading**, not simulation. Every decision is made on real tick-by-tick market data.
 
 This architecture allows sophisticated quant-level logic to run on modest hardware while maintaining full transparency and control.
