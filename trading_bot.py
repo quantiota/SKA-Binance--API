@@ -97,14 +97,14 @@ P_X_NEUTRAL       = 0.51   # bull→neutral = bear→neutral
 P_NEUTRAL_BEAR    = 0.14
 
 # Proportional tolerance: tol per transition = K × P_curr_structural
-K        = 0.03
-TOL_BEAR  = K * 0.14   # = 0.0042  neutral→bear band
-TOL_BULL  = K * 0.66   # = 0.0198  neutral→bull band
-TOL_CLOSE = K * 0.51   # = 0.0153  bull→neutral = bear→neutral band
+K         = 0.03
+TOL_BEAR  = K * P_NEUTRAL_BEAR   # = 0.0042  neutral→bear band
+TOL_BULL  = K * P_NEUTRAL_BULL   # = 0.0198  neutral→bull band
+TOL_CLOSE = K * P_X_NEUTRAL      # = 0.0153  bull→neutral = bear→neutral band
 
-# Thresholds derived from P band positions
-BULL_THRESHOLD = P_NEUTRAL_NEUTRAL - P_NEUTRAL_BULL   # = 0.34
-BEAR_THRESHOLD = P_NEUTRAL_NEUTRAL - P_NEUTRAL_BEAR   # = 0.86
+# ΔP centers for regime classification (negative — P drops from neutral)
+DP_NEUTRAL_BEAR = -(P_NEUTRAL_NEUTRAL - P_NEUTRAL_BEAR)  # = -0.86
+DP_NEUTRAL_BULL = -(P_NEUTRAL_NEUTRAL - P_NEUTRAL_BULL)  # = -0.34
 
 # ΔP_pair — paired transition gap at convergence scale (observational reference)
 DP_PAIR_BULL = P_NEUTRAL_BULL - P_X_NEUTRAL    # = 0.15
