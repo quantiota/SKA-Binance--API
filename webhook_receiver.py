@@ -5,7 +5,7 @@ Listens for loop-end notifications from the SKA server.
 On each webhook: stops the current bot process (SIGTERM) and starts a fresh one.
 
 Usage:
-    python webhook_receiver.py --bot /path/to/trading_bot.py [--symbol XRPUSDT] [--port 8765] [--api https://api.quantiota.org]
+    python webhook_receiver.py --bot /path/to/trading_bot.py --symbol XRPUSDT --port 8765 --api https://api.quantiota.org
 
 Setup:
     1. Run this script once — it stays running permanently.
@@ -15,6 +15,7 @@ Setup:
 Requirements:
     pip install flask requests
 """
+
 
 import argparse
 import logging
