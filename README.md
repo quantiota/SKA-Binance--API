@@ -9,8 +9,8 @@ The **SKA Binance Trading Bot** is a high-sophistication, entropy-driven trading
 Unlike classical bots that rely on lagging indicators (RSI, Moving Averages, Bollinger Bands, etc.), the SKA bot detects **regime transitions** in real time using structural entropy. It does not predict price — it observes the market’s own internal structure as it shifts between neutral, bull, and bear regimes.
 
 The core innovation is the **paired regime cycle**:
-- `neutral-neutral → neutral-bull → bull-neutral → neutral-neutral` (LONG pair)
-- `neutral-neutral → neutral-bear → bear-neutral → neutral-neutral` (SHORT pair)
+- `neutral-neutral → neutral-bull → bull-neutral → neutral-neutral`  &#x21BA; (LONG pair)
+- `neutral-neutral → neutral-bear → bear-neutral → neutral-neutral`  &#x21BA; (SHORT pair)
 
 These transitions are not random. Their probability distribution is remarkably stable across time, giving the bot a structural edge rather than a statistical one.
 
