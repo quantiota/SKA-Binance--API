@@ -201,7 +201,7 @@ A ready-to-use trading bot prototype is provided as a starting point. It demonst
 ## User Customization
 
 ```python
-SYMBOL          = "XRPUSDT"   # XRPUSDT · BTCUSDT · ETHUSDT · BNDUSDT ·  SOLUSDT
+SYMBOL          = "XRPUSDT"   # XRPUSDT · BTCUSDT · ETHUSDT · SOLUSDT · BNBUSDT 
 MIN_NEUTRAL_GAP = 3            # Structural filter
 ```
 
@@ -241,7 +241,7 @@ The signal is symmetric — both LONG and SHORT are profitable. ΔP_pair is stab
 - [x] Define position size
 - [x] Implement order execution on OPEN and CLOSE signals
 - [ ] Verify live PnL on XRPUSDT
-- [ ] Extend to BTCUSDT · ETHUSDT · SOLUSDT · BNDUSDT 
+- [ ] Extend to BTCUSDT · ETHUSDT · SOLUSDT · BNBUSDT 
 
 
 
