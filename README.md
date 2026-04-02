@@ -178,7 +178,7 @@ You will receive a personal `SKA_API_KEY` to add to your `.env` file.
 
 ```bash
 git clone https://github.com/quantiota/SKA-Binance-API.git
-cd SKA-Binance-API/ska_api_client
+cd SKA-Binance-API
 pip install -r requirements.txt
 python trading_bot.py --symbol XRPUSDT
 ```
