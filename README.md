@@ -41,7 +41,7 @@ flowchart TD
   API[SKA API]
   BOT@{ shape: diamond, label: "Trading Bot" }
 
-  subgraph Backend["SKA Learning Server"]
+  subgraph Backend["Backend Server"]
     direction TB
     ENGINE[SKA Engine]
 
