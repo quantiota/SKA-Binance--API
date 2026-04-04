@@ -39,7 +39,7 @@ flowchart TD
 
   BINANCE[(Binance\nRaw Tick Data)]
   API[SKA API]
-  BOT@{ shape: diamond, label: "Trading Bot\nAPI Client" }
+  BOT@{ shape: diamond, label: "Trading Bot" }
 
   subgraph Backend["Backend"]
     direction TB
