@@ -39,21 +39,19 @@ flowchart TD
 
   BINANCE[(Binance\nRaw Tick Data)]
   API[SKA API]
-  BOT@{ shape: diamond, label: "Trading Bot" }
+  BOT@{ shape: diamond, label: "Trading Bot\nAPI Client" }
 
-  subgraph Backend["Backend Server"]
+  subgraph Backend["Backend"]
     direction TB
     ENGINE[SKA Engine]
-
     QDB[(QuestDB)]
-  
+    API[SKA API]
   end
 
   BINANCE -- "ticks" --> Backend
   ENGINE -- "entropy" --> QDB
-  
-  Backend -- "read" --> API
-  API -- "regime transitions" --> BOT
+  QDB -- "read" --> API
+  Backend -- "regime transitions" --> BOT
 
 BOT --> LONG
 BOT --> SHORT
