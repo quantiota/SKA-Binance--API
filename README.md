@@ -1,6 +1,6 @@
 # SKA Binance API
 
-![Trade Tick Data](trade_tick_data.jpg)
+![Trade Tick Data](trade_tick_data.png)
 
 ## Introduction
 
