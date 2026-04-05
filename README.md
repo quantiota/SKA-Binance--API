@@ -49,7 +49,6 @@ config:
 flowchart TD
   BINANCE[(Binance\nRaw Tick Data)]
   API[SKA API]
-  BOT@{ shape: diamond, label: "Trading Bot" }
 
   
 
@@ -66,12 +65,18 @@ flowchart TD
   ENGINE -- "entropy" --> QDB
   QDB -- "read" --> API
   GRAFANA -- "queries data" --> QDB
-  Backend -- "regime transitions" --> BOT
+  Backend -- "regime transitions" --> TradingBot
 
 
 
-BOT --> LONG
-BOT --> SHORT
+  subgraph TradingBot["Trading Bot"]
+    direction TB
+    BOT@{ shape: diamond, label: "State Machine" }
+    EXCHANGE[Binance\nREST API]
+    BOT -- "order" --> EXCHANGE
+  end
+TradingBot --> LONG
+TradingBot --> SHORT
 
     subgraph SHORT["SHORT"]
         direction TB
@@ -103,7 +108,7 @@ BOT --> SHORT
     classDef shortPair fill:#FFD0A0,stroke:#AAAAAA,color:#000,stroke-width:1.5px;
     classDef neutral   fill:#E8E8E8,stroke:#AAAAAA,color:#000,stroke-width:1.5px;
 
-    class BINANCE data;
+    class BINANCE,EXCHANGE data;
     class ENGINE process;
     class API,BOT process;
 
@@ -117,7 +122,6 @@ BOT --> SHORT
     class S3 neutral;
     class S4 longOpen;
     class S5 longPair;
-
 ```
 
 
