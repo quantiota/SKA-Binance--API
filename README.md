@@ -121,6 +121,7 @@ BOT --> SHORT
 ```
 
 
+
 ## Supported Symbols
 
 `XRPUSDT` · `BTCUSDT` · `ETHUSDT` · `SOLUSDT` · `BNBUSDT`
@@ -302,7 +303,7 @@ python trading_bot.py --symbol ETHUSDT &
 
 
 
-## Dashboard
+## Grafana Dashboard
 
 Each panel displays 8 metrics per symbol, reset every 3500 trades: price, regime transition probabilities, trade order, trade statistic, accumulated volume, and entropy.
 
