@@ -69,7 +69,7 @@ config:
   layout: elk
 ---
 
-     block-beta                                                                                                                                                 
+ block-beta                                                                                                                                                 
     columns 24                                                                                                                                               
     C4["neutral→neutral\nP ≈ 1.00"] C5["neutral→neutral\nP ≈ 1.00"] C6["neutral→neutral\nP ≈ 1.00"] C1["neutral→neutral\nP ≈ 1.00"] space space              
     C10["neutral→neutral\nP ≈ 1.00"] C11["neutral→neutral\nP ≈ 1.00"] C12["neutral→neutral\nP ≈ 1.00"] C7["neutral→neutral\nP ≈ 1.00"] space space       
