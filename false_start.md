@@ -1,8 +1,8 @@
 
 
-#False Start 
+# False Start 
 
-##False Start — Direct bull→bear Transition
+## False Start — Direct bull→bear Transition
 
   The market confirms two bull pairs correctly (neutral→bull→neutral), then opens a third LONG at     
   neutral→bull. Instead of confirming with bull→neutral (P ≈ 0.51), the transition fires directly
