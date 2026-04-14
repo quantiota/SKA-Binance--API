@@ -12,7 +12,6 @@ Date       : UTC timestamp of the loop
 Trade ID   : Binance trade_id at the false start transition
 Sequence   : transition path observed
 P values   : P at each transition
-PnL        : pips lost on the false start trade
 ```
 
 ---
@@ -25,7 +24,6 @@ PnL        : pips lost on the false start trade
 
 ### Case 1 — Bull False Start 
 
-```
 **Observed sequence** (trade_id window 1607297434–1607297456):
 
 - `neutral→neutral` P = 1.00 — extended neutral gap
@@ -40,8 +38,6 @@ PnL        : pips lost on the false start trade
 - `neutral→neutral` P = 1.00 — neutral gap resumes
 
 All 7 transition types observed within ~22 trade IDs.
-
-```
 
 ![False Start Case 1](Screenshot_case1.png)
 
