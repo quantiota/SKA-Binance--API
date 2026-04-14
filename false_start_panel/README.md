@@ -41,17 +41,23 @@ All 7 transition types observed within ~22 trade IDs.
 
 ![False Start Case 1](screenshot_case1.png)
 
-**Inner sequence** (between bull pair 1 and bull pair 2):
+**Episode sequence** (neutral→neutral → ... → neutral→neutral):
 
 ```python
 {
     "date": "2026-04-14T11:37:30.746Z",
-    "trade_id_window": [1607297442, 1607297445],
+    "trade_id_window": [1607297434, 1607297456],
     "sequence": [
-        {"transition": "neutral→bear", "P": 0.15},
-        {"transition": "bear→bull",    "P": 0.45},
-        {"transition": "bull→bear",    "P": 0.02},
-        {"transition": "bear→neutral", "P": 0.51}
+        {"transition": "neutral→neutral", "P": 1.00},
+        {"transition": "neutral→bull",    "P": 0.66},
+        {"transition": "bull→neutral",    "P": 0.51},
+        {"transition": "neutral→bear",    "P": 0.15},
+        {"transition": "bear→bull",       "P": 0.45},
+        {"transition": "bull→bear",       "P": 0.02},
+        {"transition": "bear→neutral",    "P": 0.51},
+        {"transition": "neutral→bull",    "P": 0.66},
+        {"transition": "bull→neutral",    "P": 0.51},
+        {"transition": "neutral→neutral", "P": 1.00}
     ]
 }
 ```
@@ -71,17 +77,21 @@ All 7 transition types observed within ~22 trade IDs.
 
 ![False Start Case 2](screenshot_case2.png)
 
-**Inner sequence** (between bear pair and bull→neutral close):
+**Episode sequence** (neutral→neutral → ... → neutral→neutral):
 
 ```python
 {
     "date": "2026-04-14T12:21:45.115Z",
-    "trade_id_window": [1607313373, 1607313376],
+    "trade_id_window": [1607313366, 1607313382],
     "sequence": [
-        {"transition": "neutral→bull", "P": 0.66},
-        {"transition": "bull→bear",    "P": 0.02},
-        {"transition": "bear→bull",    "P": 0.45},
-        {"transition": "bull→neutral", "P": 0.52}
+        {"transition": "neutral→neutral", "P": 1.00},
+        {"transition": "neutral→bear",    "P": 0.15},
+        {"transition": "bear→neutral",    "P": 0.51},
+        {"transition": "neutral→bull",    "P": 0.66},
+        {"transition": "bull→bear",       "P": 0.02},
+        {"transition": "bear→bull",       "P": 0.45},
+        {"transition": "bull→neutral",    "P": 0.51},
+        {"transition": "neutral→neutral", "P": 1.00}
     ]
 }
 ```
@@ -103,7 +113,7 @@ All 7 transition types observed within ~22 trade IDs.
 
 ![False Start Case 3](screenshot_case3.png)
 
-**Inner sequence** (between bull pair and close):
+**Episode sequence** (neutral→neutral → ... → neutral→neutral):
 
 ```python
 {
