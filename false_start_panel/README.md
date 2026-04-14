@@ -234,7 +234,7 @@ All 7 transition types observed within ~22 trade IDs.
 - `bear→neutral`    P ≈ 0.51 — at ~1607465181
 - `neutral→neutral` P = 1.00 — neutral gap resumes
 
-![False Start Case 7](screenshots/false_start_20260414_1601.png)
+![False Start Case 7](screenshot_case7.png)
 
 **Episode sequence** (neutral→neutral → ... → neutral→neutral):
 
