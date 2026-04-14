@@ -69,7 +69,7 @@ All 7 transition types observed within ~22 trade IDs.
 - `bull→neutral`    P ≈ 0.52 — at ~1607313376
 - `neutral→neutral` P = 1.00 — neutral gap resumes
 
-![False Start Case 1](screenshot_case2.png)
+![False Start Case 2](screenshot_case2.png)
 
 **Inner sequence** (between bear pair and bull→neutral close):
 
