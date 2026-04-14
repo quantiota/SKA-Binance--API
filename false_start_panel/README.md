@@ -104,7 +104,7 @@ All 7 transition types observed within ~22 trade IDs.
 - `bear→neutral`    P ≈ 0.51 — bear pair 2 complete ✓
 - `bull→neutral`    P ≈ 0.51 — at ~1607321268 — **different close** (no preceding neutral→bull)
 
-![Case 3](screenshots_case3.png)
+![False Start Case 3](screenshot_case3.png)
 
 **Difference from Case 1**: Case 1 closes with a confirmed `neutral→bull` → `bull→neutral` pair. Here the close is `bull→neutral` appearing without a preceding `neutral→bull` — the open of the bull leg is absent, only the close arrives.
 
