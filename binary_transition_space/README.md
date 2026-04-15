@@ -9,7 +9,7 @@ We believe—like John Archibald Wheeler—that the ultimate foundation of reali
 *John Archibald Wheeler, “Information, Physics, Quantum: The Search for Links” (1989/1990).*
 
 
-
+---
 
 ## State Encoding
 
@@ -49,19 +49,19 @@ This grounds all transitions in binary arithmetic and makes AND/OR/XOR operation
 
 In the SKA 3-state regime machine (bull, neutral, bear), there are 9 possible transition types. Each transition is a **yes/no question** — a single bit of information.
 
-The 9 basis transitions, each with its one-hot vector `e_t ∈ {0,1}⁹`:
+The 9 basis transitions, indexed by their 4-bit word, each with its one-hot vector `e_t ∈ {0,1}⁹`:
 
-| Index | Transition | One-hot |
-|---|---|---|
-| 0 | neutral→neutral | `[1,0,0,0,0,0,0,0,0]` |
-| 1 | neutral→bull   | `[0,1,0,0,0,0,0,0,0]` |
-| 2 | neutral→bear   | `[0,0,1,0,0,0,0,0,0]` |
-| 3 | bull→neutral   | `[0,0,0,1,0,0,0,0,0]` |
-| 4 | bear→neutral   | `[0,0,0,0,1,0,0,0,0]` |
-| 5 | bull→bear      | `[0,0,0,0,0,1,0,0,0]` |
-| 6 | bear→bull      | `[0,0,0,0,0,0,1,0,0]` |
-| 7 | bull→bull      | `[0,0,0,0,0,0,0,1,0]` — never observed |
-| 8 | bear→bear      | `[0,0,0,0,0,0,0,0,1]` — never observed |
+| Index | Transition       | 4-bit word | One-hot               |
+|-------|-----------------|------------|-----------------------|
+| 0     | neutral→neutral | `0000`     | `[1,0,0,0,0,0,0,0,0]` |
+| 1     | neutral→bull    | `0001`     | `[0,1,0,0,0,0,0,0,0]` |
+| 2     | neutral→bear    | `0010`     | `[0,0,1,0,0,0,0,0,0]` |
+| 3     | bull→neutral    | `0100`     | `[0,0,0,1,0,0,0,0,0]` |
+| 4     | bear→neutral    | `1000`     | `[0,0,0,0,1,0,0,0,0]` |
+| 5     | bull→bear       | `0110`     | `[0,0,0,0,0,1,0,0,0]` |
+| 6     | bear→bull       | `1001`     | `[0,0,0,0,0,0,1,0,0]` |
+| 7     | bull→bull       | `0101`     | `[0,0,0,0,0,0,0,1,0]` — never observed |
+| 8     | bear→bear       | `1010`     | `[0,0,0,0,0,0,0,0,1]` — never observed |
 
 ---
 
@@ -97,16 +97,19 @@ This is the detection rule used against the false start library.
 
 Sequence: `neutral→bear, bear→neutral, neutral→bull, bull→neutral, neutral→bear, bear→bull, bull→neutral`
 
-One-hots present:
-- neutral→neutral (boundary): index 0
-- neutral→bull: index 1
-- neutral→bear: index 2
-- bull→neutral: index 3
-- bear→neutral: index 4
-- bear→bull: index 6
+4-bit words present:
+
+| Transition       | 4-bit word | Index | Bit |
+|-----------------|------------|-------|-----|
+| neutral→neutral | `0000`     | 0     | 1   |
+| neutral→bear    | `0010`     | 2     | 1   |
+| bear→neutral    | `1000`     | 4     | 1   |
+| neutral→bull    | `0001`     | 1     | 1   |
+| bull→neutral    | `0100`     | 3     | 1   |
+| neutral→bear    | `0010`     | 2     | 1   |
+| bear→bull       | `1001`     | 6     | 1   |
+| bull→bear       | `0110`     | 5     | 0   | ← never appears
 
 ```
 bv = [1, 1, 1, 1, 1, 0, 1, 0, 0]
 ```
-
-`bull→bear` (index 5) never appears → bit 5 = 0.
