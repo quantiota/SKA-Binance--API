@@ -7,7 +7,7 @@ We believe—like John Archibald Wheeler—that the ultimate foundation of reali
 
 *John Archibald Wheeler, "Information, Physics, Quantum: The Search for Links" (1989/1990).*
 
-
+---
 
 ## State Encoding
 
@@ -19,11 +19,13 @@ We believe—like John Archibald Wheeler—that the ultimate foundation of reali
 
 Code `11` is undefined and never occurs.
 
-
+---
 
 ## Transition Encoding
 
 A transition A→B is a **4-bit word** `[a₁a₀b₁b₀]` (from-state | to-state):
+
+The index is `prev_regime × 3 + regime` where `neutral=0, bull=1, bear=2`:
 
 | Index | Transition       | 4-bit word |
 |-------|-----------------|------------|
@@ -31,14 +33,31 @@ A transition A→B is a **4-bit word** `[a₁a₀b₁b₀]` (from-state | to-sta
 | 1     | neutral→bull    | `0001`     |
 | 2     | neutral→bear    | `0010`     |
 | 3     | bull→neutral    | `0100`     |
-| 4     | bear→neutral    | `1000`     |
+| 4     | bull→bull       | `0101`     | — never observed |
 | 5     | bull→bear       | `0110`     |
-| 6     | bear→bull       | `1001`     |
-| 7     | bull→bull       | `0101`     | — never observed |
+| 6     | bear→neutral    | `1000`     |
+| 7     | bear→bull       | `1001`     |
 | 8     | bear→bear       | `1010`     | — never observed |
 
+---
 
+## Composition ∘
 
+`t₁ ∘ t₂` is valid when the to-state of `t₁` equals the from-state of `t₂`. The result:
+
+```
+t₁ ∘ t₂ = (t₁ AND 1100) OR (t₂ AND 0011)
+```
+
+Example: `neutral→neutral ∘ neutral→bull`
+
+```
+(0000 AND 1100) OR (0001 AND 0011) = 0000 OR 0001 = 0001  (neutral→bull)
+```
+
+A sequence is grammatically valid if and only if every consecutive pair composes.
+
+---
 
 ## Sequence
 
@@ -57,5 +76,18 @@ code(S) = 0000 a₁ a₂ ... aₖ 0000  =  4(k+2) bits
 ```
 
 Two sequences are identical if and only if their binary codes are equal. The code is the complete, unambiguous identity of the episode — independent of time, price, and asset.
+
+---
+
+## Binary Information Flow
+
+The entire market is a continuous binary stream of 4-bit words:
+
+```
+... 0000 0000 0000 0010 1000 0001 0100 0010 1001 0100 0000 0000 0001 0100 0000 0000 0010 1001 0110 1001 0100 0000 0000 0000 ...
+```
+
+- `0000` — neutral→neutral (silence between episodes)
+- any other word — regime transition (episode content)
 
 
