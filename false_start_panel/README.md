@@ -396,3 +396,44 @@ Inner length 7 — LONG false start + LONG detour. Δ pips = +1.
     ]
 }
 ```
+
+
+
+
+### Case 12 — 2026-04-15T15:54:37.855Z
+
+**Observed sequence** (trade_id window 1607932430–1607932474):
+
+- `neutral→neutral` P = 1.00 — extended neutral gap
+- `neutral→bear`    P ≈ 0.14 — at ~1607932445
+- `bear→neutral`    P ≈ 0.51 — at ~1607932446
+- `neutral→bull`    P ≈ 0.67 — at ~1607932447
+- `bull→neutral`    P ≈ 0.52 — at ~1607932448
+- `neutral→bear`    P ≈ 0.14 — at ~1607932449
+- `bear→bull`       P ≈ 0.45 — at ~1607932450
+- `bull→neutral`    P ≈ 0.52 — at ~1607932451
+- `neutral→neutral` P = 1.00 — neutral gap resumes
+
+Inner path appears composite — alternating SHORT and LONG detours inside the same neutral envelope.
+
+![False Start Case 12](screenshot_case12.png)
+
+**Episode sequence** (neutral→neutral → ... → neutral→neutral):
+
+```python
+{
+    "date": "2026-04-15T15:54:37.855Z",
+    "trade_id_window": [1607932430, 1607932474],
+    "sequence": [
+        {"transition": "neutral→neutral", "P": 1.00},
+        {"transition": "neutral→bear",    "P": 0.14},
+        {"transition": "bear→neutral",    "P": 0.51},
+        {"transition": "neutral→bull",    "P": 0.67},
+        {"transition": "bull→neutral",    "P": 0.52},
+        {"transition": "neutral→bear",    "P": 0.14},
+        {"transition": "bear→bull",       "P": 0.45},
+        {"transition": "bull→neutral",    "P": 0.52},
+        {"transition": "neutral→neutral", "P": 1.00}
+    ]
+}
+```
