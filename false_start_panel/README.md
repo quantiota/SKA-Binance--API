@@ -252,3 +252,42 @@ All 7 transition types observed within ~22 trade IDs.
     ]
 }
 ```
+
+
+### Case 8 — 2026-04-14T16:27:15.437Z
+
+**Observed sequence** (trade_id window 1607464542–1607464551):
+
+- `neutral→neutral` P = 1.00 — extended neutral gap
+- `neutral→bear`    P ≈ 0.15 — at ~1607464543
+- `bear→bull`       P ≈ 0.45 — at ~1607464544
+- `bull→neutral`    P ≈ 0.51 — at ~1607464545
+- `neutral→bear`    P ≈ 0.15 — at ~1607464546
+- `bear→bull`       P ≈ 0.45 — at ~1607464547
+- `bull→bear`       P ≈ 0.02 — at ~1607464548
+- `bear→neutral`    P ≈ 0.51 — at ~1607464549
+- `neutral→neutral` P = 1.00 — neutral gap resumes
+
+Inner length 7 — beyond library (inner ≤ 4). Δ pips = −1.
+
+![False Start Case 8](screenshot_case8.png)
+
+**Episode sequence** (neutral→neutral → ... → neutral→neutral):
+
+```python
+{
+    "date": "2026-04-14T16:27:15.437Z",
+    "trade_id_window": [1607464542, 1607464551],
+    "sequence": [
+        {"transition": "neutral→neutral", "P": 1.00},
+        {"transition": "neutral→bear",    "P": 0.15},
+        {"transition": "bear→bull",       "P": 0.45},
+        {"transition": "bull→neutral",    "P": 0.51},
+        {"transition": "neutral→bear",    "P": 0.15},
+        {"transition": "bear→bull",       "P": 0.45},
+        {"transition": "bull→bear",       "P": 0.02},
+        {"transition": "bear→neutral",    "P": 0.51},
+        {"transition": "neutral→neutral", "P": 1.00}
+    ]
+}
+```
