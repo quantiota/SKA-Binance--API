@@ -79,6 +79,33 @@ This maps every sequence to a point in `{0,1}⁹` — the binary transition spac
 
 ---
 
+## Composition Operator ∘
+
+Two transitions compose if the **to-state** of the first equals the **from-state** of the second:
+
+```
+t₁ ∘ t₂  is valid  iff  lower_2_bits(t₁) == upper_2_bits(t₂)
+```
+
+The result is the transition from the from-state of `t₁` to the to-state of `t₂`:
+
+```
+t₁ ∘ t₂ = (t₁ AND 1100) OR (t₂ AND 0011)
+```
+
+Example:
+
+```
+neutral→neutral ∘ neutral→bull
+= (0000 AND 1100) OR (0001 AND 0011)
+= 0000 OR 0001
+= 0001  (neutral→bull)  ✓
+```
+
+This is the **grammar rule** of the binary transition space. A sequence `(t₁, t₂, ..., tₙ)` is grammatically valid if and only if every consecutive pair composes — the intermediate states cancel out.
+
+---
+
 ## AND as the Matching Operator
 
 A live sequence `S` **contains** a false start pattern `P` if and only if:
