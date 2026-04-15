@@ -42,17 +42,20 @@ A transition A→B is a **4-bit word** `[a₁a₀b₁b₀]` (from-state | to-sta
 
 ## Sequence
 
-A sequence is the ordered list of 4-bit transition words between two `0000` (neutral→neutral) boundaries:
+A sequence `S` is the ordered list of 4-bit words including its `0000` (neutral→neutral) boundaries:
 
 ```
-0000 | τ₁ τ₂ ... τₖ | 0000
+S = 0000 a₁ a₂ ... aₖ 0000
 ```
 
-The binary code of the sequence is the concatenation of its inner 4-bit words:
+where each `aᵢ` is a 4-bit transition word and every consecutive pair composes.
+
+The binary code of `S` is the concatenation of all its 4-bit words:
 
 ```
-code(S) = τ₁ τ₂ ... τₖ  =  4k bits
+code(S) = 0000 a₁ a₂ ... aₖ 0000  =  4(k+2) bits
 ```
 
 Two sequences are identical if and only if their binary codes are equal. The code is the complete, unambiguous identity of the episode — independent of time, price, and asset.
+
 
