@@ -2,6 +2,11 @@
 
 ### Version 1
 
+**Sequences:**
+- `320` (39.1%) : `0000 → neutral-bull → bull-neutral → 0000`  dp=+1  → LONG
+- `640` (38.6%) : `0000 → neutral-bear → bear-neutral → 0000`  dp=-1  → SHORT
+
+
 ```mermaid
 ---
 config:
@@ -57,8 +62,8 @@ flowchart TD
 Direct jumps (bull-bear, bear-bull) are no longer ignored — they signal a probe sequence and trigger HOLD.
 
 **Probe sequences:**
-- `5760`  : `0000 → neutral-bull → bull-bear → bear-neutral → 0000`  dp=0  → HOLD LONG
-- `10560` : `0000 → neutral-bear → bear-bull → bull-neutral → 0000`  dp=0  → HOLD SHORT
+- `5760`  (4.1%) : `0000 → neutral-bull → bull-bear → bear-neutral → 0000`  dp=0  → HOLD LONG
+- `10560` (4.4%) : `0000 → neutral-bear → bear-bull → bull-neutral → 0000`  dp=0  → HOLD SHORT
 
 ```mermaid
 ---
@@ -126,5 +131,3 @@ flowchart TD
 
     PROBE_EXIT_S -->|"bear→neutral\nprobe complete → HOLD"| READY_S
 ```
-
-
