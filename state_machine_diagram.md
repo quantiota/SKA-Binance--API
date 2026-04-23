@@ -2,6 +2,8 @@
 
 ### Version 1
 
+From Wheeler's "It from Bit" — every sequence is a binary question with a binary answer:
+
 **Sequences:**
 - (39.1%) Question: "Is there buying demand?" `neutral-neutral → neutral-bull`  Answer: "Yes" `bull-neutral → neutral-neutral`  dp=+1  → LONG
 - (38.6%) Question: "Is there selling pressure?" `neutral-neutral → neutral-bear`  Answer: "Yes" `bear-neutral → neutral-neutral`  dp=-1  → SHORT
