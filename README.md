@@ -185,6 +185,8 @@ The state machine operates on trade sequence. Each transition is triggered by th
 
 The current state machine is already a structured parser of market transitions, but it is likely only an initial approximation of a deeper discrete structural grammar.
 
+Version 1
+
 ```mermaid
 ---
 config:
@@ -233,6 +235,9 @@ flowchart TD
     EXIT_S -->|"bull→neutral\n|P−0.51|≤0.0153"| CLOSE_S["CLOSE SHORT"]
     EXIT_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
 ```
+
+
+[Version 2 — probe-aware, sequence-level decision](https://github.com/quantiota/SKA-Binance-API/blob/main/state_machine_diagram.md)
 
 ## Supported Symbols
 
