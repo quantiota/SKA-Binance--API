@@ -2,7 +2,7 @@
 
 ### Version 1
 
-From Wheeler's "It from Bit" — every sequence is a binary question with a binary answer:
+From Wheeler's "It from Bit" — every sequence is a binary question with a binary answer, price is the registred answer.
 
 **Sequences:**
 - (39.1%) Question: "Is there buying demand?" `neutral-neutral → neutral-bull`  Answer: "Yes" `bull-neutral → neutral-neutral`  dp=+1  → LONG
