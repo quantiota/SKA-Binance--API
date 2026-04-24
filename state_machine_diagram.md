@@ -93,17 +93,17 @@ flowchart TD
     WAIT_PAIR_S -->|"bear→neutral\npair confirmed"| IN_N_S["IN_NEUTRAL\ncounting neutral→neutral"]
 
     IN_N_L -->|"n ≥ 10 then non-neutral"| READY_L["READY\nLONG"]
+    IN_N_L -->|"non-neutral before n=10\nreset counter"| IN_N_L
     IN_N_S -->|"n ≥ 10 then non-neutral"| READY_S["READY\nSHORT"]
+    IN_N_S -->|"non-neutral before n=10\nreset counter"| IN_N_S
 
     READY_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
     READY_L -->|"neutral→bear\nopposite opens"| EXIT_L["EXIT_WAIT\nLONG"]
     EXIT_L -->|"bear→neutral\n|P−0.51|≤0.0153"| CLOSE_L["CLOSE LONG"]
-    EXIT_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
 
     READY_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
     READY_S -->|"neutral→bull\nopposite opens"| EXIT_S["EXIT_WAIT\nSHORT"]
     EXIT_S -->|"bull→neutral\n|P−0.51|≤0.0153"| CLOSE_S["CLOSE SHORT"]
-    EXIT_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
 ```
 
 ---
@@ -155,13 +155,13 @@ flowchart TD
     PROBE_L -->|"bear→neutral\nprobe complete"| READY_L["READY\nLONG"]
 
     IN_N_L -->|"n ≥ 10 then non-neutral"| READY_L
+    IN_N_L -->|"non-neutral before n=10\nreset counter"| IN_N_L
 
     READY_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
     READY_L -->|"neutral→bear\nopposite opens"| EXIT_L["EXIT_WAIT\nLONG"]
 
     EXIT_L -->|"bear→neutral\n|P−0.51|≤0.0153"| CLOSE_L["CLOSE LONG"]
     EXIT_L -->|"bear→bull\nprobe detected"| PROBE_EXIT_L["PROBE_EXIT\nLONG held"]
-    EXIT_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
 
     PROBE_EXIT_L -->|"bull→neutral\nprobe complete → HOLD"| READY_L
 
@@ -172,13 +172,13 @@ flowchart TD
     PROBE_S -->|"bull→neutral\nprobe complete"| READY_S["READY\nSHORT"]
 
     IN_N_S -->|"n ≥ 10 then non-neutral"| READY_S
+    IN_N_S -->|"non-neutral before n=10\nreset counter"| IN_N_S
 
     READY_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
     READY_S -->|"neutral→bull\nopposite opens"| EXIT_S["EXIT_WAIT\nSHORT"]
 
     EXIT_S -->|"bull→neutral\n|P−0.51|≤0.0153"| CLOSE_S["CLOSE SHORT"]
     EXIT_S -->|"bull→bear\nprobe detected"| PROBE_EXIT_S["PROBE_EXIT\nSHORT held"]
-    EXIT_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
 
     PROBE_EXIT_S -->|"bear→neutral\nprobe complete → HOLD"| READY_S
 ```
@@ -191,8 +191,6 @@ After bear→neutral in EXIT_WAIT LONG, the machine checks the next transition b
 **Compound sequences:**
 - `164160` (2.17%) Question: "Is there selling pressure?" `neutral-neutral → neutral-bear`  Answer: "Yes" `bear-neutral` then Question: "Is there buying demand?" `neutral-bull`  Answer: "Yes" `bull-neutral → neutral-neutral`  dp=0  → HOLD LONG
 - `82560` (2.10%) Question: "Is there buying demand?" `neutral-neutral → neutral-bull`  Answer: "Yes" `bull-neutral` then Question: "Is there selling pressure?" `neutral-bear`  Answer: "Yes" `bear-neutral → neutral-neutral`  dp=0  → HOLD SHORT
-
-
 
 ```mermaid
 ---
@@ -217,36 +215,54 @@ flowchart TD
 
     B -->|"prev=0 curr=1"| T3["neutral→bull\nP ≈ 0.66"]
     B -->|"prev=1 curr=1"| T4["bull→bull"]
-    B -->|"prev=2 curr=1"| DJ2["bear→bull\nIGNORED — direct jump"]
+    B -->|"prev=2 curr=1"| DJ2["bear→bull\nMONITORED"]
 
     R -->|"prev=0 curr=2"| T5["neutral→bear\nP ≈ 0.14"]
     R -->|"prev=2 curr=2"| T6["bear→bear"]
-    R -->|"prev=1 curr=2"| DJ1["bull→bear\nIGNORED — direct jump"]
+    R -->|"prev=1 curr=2"| DJ1["bull→bear\nMONITORED"]
 
     T3 -->|"OPEN LONG"| WAIT_PAIR_L["WAIT_PAIR\nLONG"]
     T5 -->|"OPEN SHORT"| WAIT_PAIR_S["WAIT_PAIR\nSHORT"]
 
+    %% --- LONG path ---
     WAIT_PAIR_L -->|"bull→neutral\npair confirmed"| IN_N_L["IN_NEUTRAL\ncounting neutral→neutral"]
-    WAIT_PAIR_S -->|"bear→neutral\npair confirmed"| IN_N_S["IN_NEUTRAL\ncounting neutral→neutral"]
+    WAIT_PAIR_L -->|"bull→bear\nprobe detected"| PROBE_L["PROBE\nLONG held"]
 
-    IN_N_L -->|"n ≥ 10 then non-neutral"| READY_L["READY\nLONG"]
-    IN_N_S -->|"n ≥ 10 then non-neutral"| READY_S["READY\nSHORT"]
+    PROBE_L -->|"bear→neutral\nprobe complete"| READY_L["READY\nLONG"]
+
+    IN_N_L -->|"n ≥ 10 then non-neutral"| READY_L
+    IN_N_L -->|"non-neutral before n=10\nreset counter"| IN_N_L
 
     READY_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
     READY_L -->|"neutral→bear\nopposite opens"| EXIT_L["EXIT_WAIT\nLONG"]
 
     EXIT_L -->|"bear→neutral\n|P−0.51|≤0.0153"| CHECK_L["COMPOUND_CHECK\nLONG"]
-    EXIT_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
+    EXIT_L -->|"bear→bull\nprobe detected"| PROBE_EXIT_L["PROBE_EXIT\nLONG held"]
+
+    PROBE_EXIT_L -->|"bull→neutral\nprobe complete → HOLD"| READY_L
 
     CHECK_L -->|"neutral→neutral\ngenuine close"| CLOSE_L["CLOSE LONG"]
     CHECK_L -->|"neutral→bull\ncompound detected → HOLD"| WAIT_PAIR_L
+    CHECK_L -->|"neutral→bear\nnew opposite signal"| EXIT_L
+
+    %% --- SHORT path ---
+    WAIT_PAIR_S -->|"bear→neutral\npair confirmed"| IN_N_S["IN_NEUTRAL\ncounting neutral→neutral"]
+    WAIT_PAIR_S -->|"bear→bull\nprobe detected"| PROBE_S["PROBE\nSHORT held"]
+
+    PROBE_S -->|"bull→neutral\nprobe complete"| READY_S["READY\nSHORT"]
+
+    IN_N_S -->|"n ≥ 10 then non-neutral"| READY_S
+    IN_N_S -->|"non-neutral before n=10\nreset counter"| IN_N_S
 
     READY_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
     READY_S -->|"neutral→bull\nopposite opens"| EXIT_S["EXIT_WAIT\nSHORT"]
 
     EXIT_S -->|"bull→neutral\n|P−0.51|≤0.0153"| CHECK_S["COMPOUND_CHECK\nSHORT"]
-    EXIT_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
+    EXIT_S -->|"bull→bear\nprobe detected"| PROBE_EXIT_S["PROBE_EXIT\nSHORT held"]
+
+    PROBE_EXIT_S -->|"bear→neutral\nprobe complete → HOLD"| READY_S
 
     CHECK_S -->|"neutral→neutral\ngenuine close"| CLOSE_S["CLOSE SHORT"]
     CHECK_S -->|"neutral→bear\ncompound detected → HOLD"| WAIT_PAIR_S
+    CHECK_S -->|"neutral→bull\nnew opposite signal"| EXIT_S
 ```
