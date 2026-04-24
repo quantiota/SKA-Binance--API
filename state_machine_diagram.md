@@ -54,8 +54,8 @@ This is where the variational principle becomes visible: the market is not wande
 From Wheeler's "It from Bit" — every sequence is a binary question with a binary answer, price is the registred answer.
 
 **Sequences:**
-- (39.1%) Question: "Is there buying demand?" `neutral-neutral → neutral-bull`  Answer: "Yes" `bull-neutral → neutral-neutral`  dp=+1  → LONG
-- (38.6%) Question: "Is there selling pressure?" `neutral-neutral → neutral-bear`  Answer: "Yes" `bear-neutral → neutral-neutral`  dp=-1  → SHORT
+- `320` (39.1%) Question: "Is there buying demand?" `neutral-neutral → neutral-bull`  Answer: "Yes" `bull-neutral → neutral-neutral`  dp=+1  → LONG
+- `640` (38.6%) Question: "Is there selling pressure?" `neutral-neutral → neutral-bear`  Answer: "Yes" `bear-neutral → neutral-neutral`  dp=-1  → SHORT
 
 ```mermaid
 ---
@@ -113,8 +113,8 @@ flowchart TD
 Direct jumps (bull-bear, bear-bull) are no longer ignored — they signal a probe sequence and trigger HOLD.
 
 **Probe sequences:**
-- (4.1%) Question: "Is there buying demand?" `neutral-neutral → neutral-bull`  Answer: "No" `bull-bear → bear-neutral → neutral-neutral`  dp=0  → HOLD LONG
-- (4.4%) Question: "Is there selling pressure?" `neutral-neutral → neutral-bear`  Answer: "No" `bear-bull → bull-neutral → neutral-neutral`  dp=0  → HOLD SHORT
+- `5760` (4.1%) Question: "Is there buying demand?" `neutral-neutral → neutral-bull`  Answer: "No" `bull-bear → bear-neutral → neutral-neutral`  dp=0  → HOLD LONG
+- `10560` (4.4%) Question: "Is there selling pressure?" `neutral-neutral → neutral-bear`  Answer: "No" `bear-bull → bull-neutral → neutral-neutral`  dp=0  → HOLD SHORT
 
 ```mermaid
 ---
