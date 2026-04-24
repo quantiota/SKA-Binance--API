@@ -51,7 +51,7 @@ This is where the variational principle becomes visible: the market is not wande
 
 ### Version 1
 
-From Wheeler's "It from Bit" — every sequence is a binary question with a binary answer, price is the registred answer.
+From Wheeler's "It from Bit" — every sequence is a binary question with a binary answer, price is the registered answer.
 
 **Sequences:**
 - `320` (39.1%) Question: "Is there buying demand?" `neutral-neutral → neutral-bull`  Answer: "Yes" `bull-neutral → neutral-neutral`  dp=+1  → LONG
