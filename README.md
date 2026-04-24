@@ -216,28 +216,45 @@ flowchart TD
     R -->|"prev=2 curr=2"| T6["bear→bear"]
     R -->|"prev=1 curr=2"| DJ1["bull→bear\nIGNORED — direct jump"]
 
-    T3 -->|"OPEN LONG"| WAIT_PAIR_L["WAIT_PAIR\nLONG"]
-    T5 -->|"OPEN SHORT"| WAIT_PAIR_S["WAIT_PAIR\nSHORT"]
+    subgraph LONG_PATH ["LONG"]
+        WAIT_PAIR_L["WAIT_PAIR\nLONG"]
+        IN_N_L["IN_NEUTRAL\ncounting neutral→neutral"]
+        READY_L["READY\nLONG"]
+        EXIT_L["EXIT_WAIT\nLONG"]
+        CLOSE_L["CLOSE LONG"]
 
-    WAIT_PAIR_L -->|"bull→neutral\npair confirmed"| IN_N_L["IN_NEUTRAL\ncounting neutral→neutral"]
-    WAIT_PAIR_S -->|"bear→neutral\npair confirmed"| IN_N_S["IN_NEUTRAL\ncounting neutral→neutral"]
+        WAIT_PAIR_L -->|"bull→neutral\npair confirmed"| IN_N_L
+        IN_N_L -->|"n ≥ 10 then non-neutral"| READY_L
+        IN_N_L -->|"non-neutral before n=10\nreset counter"| IN_N_L
+        READY_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
+        READY_L -->|"neutral→bear\nopposite opens"| EXIT_L
+        EXIT_L -->|"bear→neutral\n|P−0.51|≤0.0153"| CLOSE_L
+    end
 
-    IN_N_L -->|"n ≥ 10 then non-neutral"| READY_L["READY\nLONG"]
-    IN_N_S -->|"n ≥ 10 then non-neutral"| READY_S["READY\nSHORT"]
+    subgraph SHORT_PATH ["SHORT"]
+        WAIT_PAIR_S["WAIT_PAIR\nSHORT"]
+        IN_N_S["IN_NEUTRAL\ncounting neutral→neutral"]
+        READY_S["READY\nSHORT"]
+        EXIT_S["EXIT_WAIT\nSHORT"]
+        CLOSE_S["CLOSE SHORT"]
 
-    READY_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
-    READY_L -->|"neutral→bear\nopposite opens"| EXIT_L["EXIT_WAIT\nLONG"]
-    EXIT_L -->|"bear→neutral\n|P−0.51|≤0.0153"| CLOSE_L["CLOSE LONG"]
-    EXIT_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
+        WAIT_PAIR_S -->|"bear→neutral\npair confirmed"| IN_N_S
+        IN_N_S -->|"n ≥ 10 then non-neutral"| READY_S
+        IN_N_S -->|"non-neutral before n=10\nreset counter"| IN_N_S
+        READY_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
+        READY_S -->|"neutral→bull\nopposite opens"| EXIT_S
+        EXIT_S -->|"bull→neutral\n|P−0.51|≤0.0153"| CLOSE_S
+    end
 
-    READY_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
-    READY_S -->|"neutral→bull\nopposite opens"| EXIT_S["EXIT_WAIT\nSHORT"]
-    EXIT_S -->|"bull→neutral\n|P−0.51|≤0.0153"| CLOSE_S["CLOSE SHORT"]
-    EXIT_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
+    T3 -->|"OPEN LONG"| WAIT_PAIR_L
+    T5 -->|"OPEN SHORT"| WAIT_PAIR_S
+
 ```
 
 
-[Version 2 — probe-aware, sequence-level decision](https://github.com/quantiota/SKA-Binance-API/blob/main/state_machine_diagram.md)
+
+
+[Version 2 — probe-aware & compound, sequence-level decision](https://github.com/quantiota/SKA-Binance-API/blob/main/state_machine_diagram.md)
 
 ## Supported Symbols
 
