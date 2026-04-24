@@ -86,8 +86,6 @@ flowchart TD
     R -->|"prev=2 curr=2"| T6["bear→bear"]
     R -->|"prev=1 curr=2"| DJ1["bull→bear\nIGNORED — direct jump"]
 
-    IDLE["IDLE\nawait next signal"]
-
     subgraph LONG_PATH ["LONG"]
         WAIT_PAIR_L["WAIT_PAIR\nLONG"]
         IN_N_L["IN_NEUTRAL\ncounting neutral→neutral"]
@@ -120,15 +118,8 @@ flowchart TD
 
     T3 -->|"OPEN LONG"| WAIT_PAIR_L
     T5 -->|"OPEN SHORT"| WAIT_PAIR_S
-    CLOSE_L -->|"await next signal"| IDLE
-    CLOSE_S -->|"await next signal"| IDLE
-    IDLE -->|"neutral→bull"| WAIT_PAIR_L
-    IDLE -->|"neutral→bear"| WAIT_PAIR_S
 ```
 
-**Implementation notes:**
-- **IN_NEUTRAL self-loop:** The `non-neutral before n=10 → reset counter` edge is a conceptual abstraction. In practice, any non-neutral transition resets the counter; the machine waits for the regime to return to neutral before resuming the count. All intermediate transitions (e.g. `bull→neutral`, `bull→bear`) are absorbed implicitly.
-- **V1 limitation:** Direct jumps (`bull→bear`, `bear→bull`) are marked IGNORED. V1 can stall on probe or compound sequences in live data — handled in V2 and V2bis.
 
 ---
 
@@ -211,18 +202,10 @@ flowchart TD
         PROBE_EXIT_S -->|"bear→neutral\nprobe complete → HOLD"| READY_S
     end
 
-    IDLE["IDLE\nawait next signal"]
-
     T3 -->|"OPEN LONG"| WAIT_PAIR_L
     T5 -->|"OPEN SHORT"| WAIT_PAIR_S
-    CLOSE_L -->|"await next signal"| IDLE
-    CLOSE_S -->|"await next signal"| IDLE
-    IDLE -->|"neutral→bull"| WAIT_PAIR_L
-    IDLE -->|"neutral→bear"| WAIT_PAIR_S
 ```
 
-**Implementation notes:**
-- **IN_NEUTRAL self-loop:** The `non-neutral before n=10 → reset counter` edge is a conceptual abstraction. In practice, any non-neutral transition resets the counter; the machine waits for the regime to return to neutral before resuming the count. All intermediate transitions are absorbed implicitly.
 
 
 ### Version 2bis Layer 2 — compound-aware, sequence-level decision
@@ -314,16 +297,6 @@ flowchart TD
         CHECK_S -->|"neutral→bull\nnew opposite signal"| EXIT_S
     end
 
-    IDLE["IDLE\nawait next signal"]
-
     T3 -->|"OPEN LONG"| WAIT_PAIR_L
     T5 -->|"OPEN SHORT"| WAIT_PAIR_S
-    CLOSE_L -->|"await next signal"| IDLE
-    CLOSE_S -->|"await next signal"| IDLE
-    IDLE -->|"neutral→bull"| WAIT_PAIR_L
-    IDLE -->|"neutral→bear"| WAIT_PAIR_S
 ```
-
-**Implementation notes:**
-- **IN_NEUTRAL self-loop:** The `non-neutral before n=10 → reset counter` edge is a conceptual abstraction. In practice, any non-neutral transition resets the counter; the machine waits for the regime to return to neutral before resuming the count. All intermediate transitions are absorbed implicitly.
-- **Compound loop:** The path `EXIT → COMPOUND_CHECK → EXIT → COMPOUND_CHECK → ...` can occur when the market repeatedly asks a question without a `neutral→neutral` boundary. This is correct — the machine will not close until the grammar produces a genuine sentence terminator. The position is held throughout.
