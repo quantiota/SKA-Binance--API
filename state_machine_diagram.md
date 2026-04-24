@@ -192,6 +192,8 @@ After bear→neutral in EXIT_WAIT LONG, the machine checks the next transition b
 - `164160` (2.17%) Question: "Is there selling pressure?" `neutral-neutral → neutral-bear`  Answer: "Yes" `bear-neutral` then Question: "Is there buying demand?" `neutral-bull`  Answer: "Yes" `bull-neutral → neutral-neutral`  dp=0  → HOLD LONG
 - `82560` (2.10%) Question: "Is there buying demand?" `neutral-neutral → neutral-bull`  Answer: "Yes" `bull-neutral` then Question: "Is there selling pressure?" `neutral-bear`  Answer: "Yes" `bear-neutral → neutral-neutral`  dp=0  → HOLD SHORT
 
+
+
 ```mermaid
 ---
 config:
