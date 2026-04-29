@@ -444,4 +444,18 @@ The state machine parses the grammar. The pattern matcher resolves deep-grammar 
 
 
 
+### Top 8 Sequences — Complete Reference
+
+| Rank | Code | Binary (4-bit words) | Count | % | Cum% | dp | Inner transitions | Version |
+|------|------|----------------------|------:|--:|-----:|----|-------------------|---------|
+| 1 | 320 | `0000 0001 0100 0000` | 139,507 | 39.13% | 39.1% | +1 | N→bull · bull→N | V1 |
+| 2 | 640 | `0000 0010 1000 0000` | 137,537 | 38.58% | 77.7% | −1 | N→bear · bear→N | V1 |
+| 3 | 10560 | `0000 0010 1001 0100 0000` | 15,812 | 4.43% | 82.1% | 0 | N→bear · bear→bull · bull→N | V2 |
+| 4 | 5760 | `0000 0001 0110 1000 0000` | 14,468 | 4.06% | 86.2% | 0 | N→bull · bull→bear · bear→N | V2 |
+| 5 | 164160 | `0000 0010 1000 0001 0100 0000` | 7,747 | 2.17% | 88.4% | 0 | N→bear · bear→N · N→bull · bull→N | V2bis |
+| 6 | 82560 | `0000 0001 0100 0010 1000 0000` | 7,481 | 2.10% | 90.5% | 0 | N→bull · bull→N · N→bear · bear→N | V2bis |
+| 7 | 169600 | `0000 0010 1001 0110 1000 0000` | 3,486 | 0.98% | 91.4% | −1 | N→bear · bear→bull · bull→bear · bear→N | V3 |
+| 8 | 92480 | `0000 0001 0110 1001 0100 0000` | 3,310 | 0.93% | 92.4% | +1 | N→bull · bull→bear · bear→bull · bull→N | V3 |
+
+Every sequence is bounded by `neutral→neutral` (`0000`) on both sides — the opening and closing boundaries are not shown in the inner transitions column. Each version of the state machine adds two sequences: one LONG, one SHORT, with perfect grammatical symmetry.
 
