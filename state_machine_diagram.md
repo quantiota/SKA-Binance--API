@@ -318,3 +318,110 @@ flowchart TD
 - **IN_NEUTRAL self-loop:** The `non-neutral before n=10 → reset counter` edge is a conceptual abstraction. In practice, any non-neutral transition resets the counter; the machine waits for the regime to return to neutral before resuming the count. All intermediate transitions are absorbed implicitly.
 - **After CLOSE:** The machine returns to idle, awaiting the next `neutral→bull` or `neutral→bear` signal.
 - **Compound loop:** The path `EXIT → COMPOUND_CHECK → EXIT → COMPOUND_CHECK → ...` can occur when the market repeatedly asks a question without a `neutral→neutral` boundary. This is correct — the machine will not close until the grammar produces a genuine sentence terminator. The position is held throughout.
+
+
+### Version 3 — detour-aware, sequence-level decision
+
+After a first probe (bull→bear for LONG, bear→bull for SHORT), a second direct jump is possible — the market double-probes before returning to neutral. V2bis PROBE state gets stuck on this second jump. V3 adds a DETOUR state that absorbs it and returns to READY, keeping the position alive.
+
+**Detour sequences:**
+- `92480` (0.93%) Question: "Is there buying demand?" `neutral-neutral → neutral-bull`  Double probe: `bull→bear → bear→bull → bull→neutral`  Answer deferred but confirmed — dp=+1  → LONG position held
+- `169600` (0.98%) Question: "Is there selling pressure?" `neutral-neutral → neutral-bear`  Double probe: `bear→bull → bull→bear → bear→neutral`  Answer deferred but confirmed — dp=−1  → SHORT position held
+
+State machine coverage with V3: **92.4%** (ranks 1–8). Remaining stuck sequences (3+ direct jumps, 0.56%) are suppressed by the external pattern matcher.
+
+```mermaid
+---
+config:
+  look: classic
+  theme: base
+  layout: elk
+---
+flowchart TD
+    P["P(n) = exp(-|ΔH/H|)"]
+    DP["ΔP(n) = P(n) - P(n-1)"]
+
+    P --> DP
+
+    DP -->|"|ΔP−(−0.34)|≤tol"| B["regime = 1\nbull"]
+    DP -->|"|ΔP−(−0.86)|≤tol"| R["regime = 2\nbear"]
+    DP -->|"else"| N["regime = 0\nneutral"]
+
+    N -->|"prev=0 curr=0"| T0["neutral→neutral\nP ≈ 1.00"]
+    N -->|"prev=1 curr=0"| T1["bull→neutral\nP ≈ 0.51"]
+    N -->|"prev=2 curr=0"| T2["bear→neutral\nP ≈ 0.51"]
+
+    B -->|"prev=0 curr=1"| T3["neutral→bull\nP ≈ 0.66"]
+    B -->|"prev=1 curr=1"| T4["bull→bull"]
+    B -->|"prev=2 curr=1"| DJ2["bear→bull\nMONITORED"]
+
+    R -->|"prev=0 curr=2"| T5["neutral→bear\nP ≈ 0.14"]
+    R -->|"prev=2 curr=2"| T6["bear→bear"]
+    R -->|"prev=1 curr=2"| DJ1["bull→bear\nMONITORED"]
+
+    subgraph LONG_PATH ["LONG"]
+        WAIT_PAIR_L["WAIT_PAIR\nLONG"]
+        IN_N_L["IN_NEUTRAL\ncounting neutral→neutral"]
+        PROBE_L["PROBE\nLONG held"]
+        DETOUR_L["DETOUR\nLONG held"]
+        READY_L["READY\nLONG"]
+        EXIT_L["EXIT_WAIT\nLONG"]
+        PROBE_EXIT_L["PROBE_EXIT\nLONG held"]
+        CHECK_L["COMPOUND_CHECK\nLONG"]
+        CLOSE_L["CLOSE LONG"]
+
+        WAIT_PAIR_L -->|"bull→neutral\npair confirmed"| IN_N_L
+        WAIT_PAIR_L -->|"bull→bear\nprobe detected"| PROBE_L
+        PROBE_L -->|"bear→neutral\nprobe complete"| READY_L
+        PROBE_L -->|"bear→bull\ndouble probe"| DETOUR_L
+        DETOUR_L -->|"bull→neutral\ndetour complete"| READY_L
+        IN_N_L -->|"n ≥ 10 then non-neutral"| READY_L
+        IN_N_L -->|"non-neutral before n=10\nreset counter"| IN_N_L
+        READY_L -->|"neutral→bull\ncycle repeats"| WAIT_PAIR_L
+        READY_L -->|"neutral→bear\nopposite opens"| EXIT_L
+        EXIT_L -->|"bear→neutral\n|P−0.51|≤0.0153"| CHECK_L
+        EXIT_L -->|"bear→bull\nprobe detected"| PROBE_EXIT_L
+        PROBE_EXIT_L -->|"bull→neutral\nprobe complete → HOLD"| READY_L
+        CHECK_L -->|"neutral→neutral\ngenuine close"| CLOSE_L
+        CHECK_L -->|"neutral→bull\ncompound detected → HOLD"| WAIT_PAIR_L
+        CHECK_L -->|"neutral→bear\nnew opposite signal"| EXIT_L
+    end
+
+    subgraph SHORT_PATH ["SHORT"]
+        WAIT_PAIR_S["WAIT_PAIR\nSHORT"]
+        IN_N_S["IN_NEUTRAL\ncounting neutral→neutral"]
+        PROBE_S["PROBE\nSHORT held"]
+        DETOUR_S["DETOUR\nSHORT held"]
+        READY_S["READY\nSHORT"]
+        EXIT_S["EXIT_WAIT\nSHORT"]
+        PROBE_EXIT_S["PROBE_EXIT\nSHORT held"]
+        CHECK_S["COMPOUND_CHECK\nSHORT"]
+        CLOSE_S["CLOSE SHORT"]
+
+        WAIT_PAIR_S -->|"bear→neutral\npair confirmed"| IN_N_S
+        WAIT_PAIR_S -->|"bear→bull\nprobe detected"| PROBE_S
+        PROBE_S -->|"bull→neutral\nprobe complete"| READY_S
+        PROBE_S -->|"bull→bear\ndouble probe"| DETOUR_S
+        DETOUR_S -->|"bear→neutral\ndetour complete"| READY_S
+        IN_N_S -->|"n ≥ 10 then non-neutral"| READY_S
+        IN_N_S -->|"non-neutral before n=10\nreset counter"| IN_N_S
+        READY_S -->|"neutral→bear\ncycle repeats"| WAIT_PAIR_S
+        READY_S -->|"neutral→bull\nopposite opens"| EXIT_S
+        EXIT_S -->|"bull→neutral\n|P−0.51|≤0.0153"| CHECK_S
+        EXIT_S -->|"bull→bear\nprobe detected"| PROBE_EXIT_S
+        PROBE_EXIT_S -->|"bear→neutral\nprobe complete → HOLD"| READY_S
+        CHECK_S -->|"neutral→neutral\ngenuine close"| CLOSE_S
+        CHECK_S -->|"neutral→bear\ncompound detected → HOLD"| WAIT_PAIR_S
+        CHECK_S -->|"neutral→bull\nnew opposite signal"| EXIT_S
+    end
+
+    T3 -->|"OPEN LONG"| WAIT_PAIR_L
+    T5 -->|"OPEN SHORT"| WAIT_PAIR_S
+```
+
+**Implementation notes:**
+- **IN_NEUTRAL self-loop:** Same abstraction as V2bis — any non-neutral before n=10 resets the counter; intermediate transitions absorbed implicitly.
+- **After CLOSE:** Machine returns to idle, awaiting the next `neutral→bull` or `neutral→bear` signal.
+- **DETOUR is PROBE + one level deeper:** PROBE handles one direct jump; DETOUR handles two. Both return to READY on the matching return-to-neutral.
+- **Probe path skips IN_NEUTRAL dwell:** `WAIT_PAIR → PROBE → DETOUR → READY` reaches READY without passing through IN_NEUTRAL. The probe grammar itself is the confirmation — the n≥10 dwell is not required.
+- **Remaining stuck sequences:** 3+ direct jumps (0.56% of all sequences) cannot be handled by finite state extension without diminishing returns. These are suppressed upstream by the external pattern matcher (false_start_library).
