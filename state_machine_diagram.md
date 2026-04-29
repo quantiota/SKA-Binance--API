@@ -419,9 +419,14 @@ flowchart TD
     T5 -->|"OPEN SHORT"| WAIT_PAIR_S
 ```
 
+[Full size](https://raw.githubusercontent.com/quantiota/SKA-Binance-API/7b429b01d3275a0cee5adba6b2c35614873985d8/images/state-machine-diagram-v3.svg)
+
+
 **Implementation notes:**
 - **IN_NEUTRAL self-loop:** Same abstraction as V2bis — any non-neutral before n=10 resets the counter; intermediate transitions absorbed implicitly.
 - **After CLOSE:** Machine returns to idle, awaiting the next `neutral→bull` or `neutral→bear` signal.
 - **DETOUR is PROBE + one level deeper:** PROBE handles one direct jump; DETOUR handles two. Both return to READY on the matching return-to-neutral.
 - **Probe path skips IN_NEUTRAL dwell:** `WAIT_PAIR → PROBE → DETOUR → READY` reaches READY without passing through IN_NEUTRAL. The probe grammar itself is the confirmation — the n≥10 dwell is not required.
 - **Remaining stuck sequences:** 3+ direct jumps (0.56% of all sequences) cannot be handled by finite state extension without diminishing returns. These are suppressed upstream by the external pattern matcher (false_start_library).
+
+
