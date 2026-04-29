@@ -423,6 +423,7 @@ flowchart TD
 
 
 
+
 **Implementation notes:**
 - **IN_NEUTRAL self-loop:** Same abstraction as V2bis — any non-neutral before n=10 resets the counter; intermediate transitions absorbed implicitly.
 - **After CLOSE:** Machine returns to idle, awaiting the next `neutral→bull` or `neutral→bear` signal.
@@ -436,10 +437,11 @@ flowchart TD
 | Component | Coverage | Mechanism |
 |---|---|---|
 | State Machine V3 | 92.4% | Deterministic grammar parser, 9 states |
-| Pattern Matcher | 0.56% | L1-cache integer lookup, O(log 1381) |
+| Pattern Matcher | 0.56% | Deep-grammar sequences — 3+ direct jumps, L1-cache integer lookup |
 | Unaccounted | 7.04% | Valid grammar — below frequency threshold for signal assignment |
 
-The state machine handles the grammar. The pattern matcher handles the anomalies. Low-frequency sequences are valid sentences the architecture does not yet act on.
+The state machine parses the grammar. The pattern matcher resolves deep-grammar sequences the finite machine cannot reach. Low-frequency sequences are valid sentences the architecture does not yet act on.
+
 
 
 
