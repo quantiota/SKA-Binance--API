@@ -458,6 +458,13 @@ Each panel displays 8 metrics per symbol, reset every 3500 trades: price, regime
 The full mathematical foundation and batch implementation are public for verification on [GitHub](https://github.com/quantiota/Arxiv). The real-time system extends that foundation to continuous entropy learning — that part is proprietary.
 
 
+**Interactive visualization of the SKA forward learning algorithm on MNIST**
+
+- [SKA Explorer](https://huggingface.co/quant-iota)
+
+**SKA Academy**
+
+- [Structured Knowledge Accumulation Course](https://quantiota.moodlecloud.com/)
 
 
 ## Contributing
