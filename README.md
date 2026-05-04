@@ -1,6 +1,6 @@
 # SKA Binance API
 
- ![clones](https://img.shields.io/badge/clones%2014d-1216-blue)
+ ![clones](https://img.shields.io/badge/clones%2014d-1216-brightgreen)
 
 ![Trade Tick Data](trade_tick_data.png)
 
