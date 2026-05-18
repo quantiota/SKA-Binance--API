@@ -401,7 +401,7 @@ MIN_NEUTRAL_GAP = 3            # Structural filter
 
 Results from state machine V1 — covers ranks 1–2 (77.7% of market sequences).
 
-The signal is symmetric — both LONG and SHORT are independently profitable with near-identical average PnL. ΔP_pair is stable across all 516 loops (bull ≈ −0.157, bear ≈ +0.377), confirming SKA convergence and structural consistency of the signal.
+The signal is symmetric — both LONG and SHORT are independently profitable with near-identical average PnL. ΔP_pair is stable across all 516 loops (bull ≈ −0.157, bear ≈ +0.377), confirming SKA structural consistency of the signal.
 
 
 
